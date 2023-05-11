@@ -14,7 +14,13 @@ mutable struct Ban <: AbstractAlgNum
 end
 
 
-
+# static method definition
+function Ban.sum(a :: Ban, b :: Ban)::Ban
+    # we need the length of both a and b num fields
+    # we also need to check the starting exponent p of both a and b
+    # it could be useful to obtain the "lowest" exponent for alpha (defined as p - (len(Ban.num)))
+    
+end
 
 
 
