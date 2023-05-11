@@ -1,0 +1,2 @@
+mo-gymnasium==0.28.1
+julia==0.6.1
