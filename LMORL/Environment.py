@@ -1,4 +1,5 @@
 from gymnasium import Env
+from mo_gymnasium.utils
 
 class Environment(Env):
     """
@@ -7,6 +8,9 @@ class Environment(Env):
     
     """
     def __init__(self) -> None:
+        pass
+
+    def get_reward_dim(self) -> int:
         pass
 
     def get_scalar_reward(self):
