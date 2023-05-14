@@ -10,7 +10,7 @@ from typing import Iterator, Tuple, TypeVar
 ObsType = TypeVar("ObsType")
 ActType = TypeVar("ActType")
 
-
+# https://github.com/Farama-Foundation/MO-Gymnasium/blob/main/mo_gymnasium/utils.py class LinearReward
 class NAScalarizationLinearReward(gym.Wrapper, EzPickle):
     """Makes the env return a scalar reward, which is the dot-product between the reward vector and the weight vector."""
 
