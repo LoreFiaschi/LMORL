@@ -58,11 +58,13 @@ class DQNHybrid(Agent):
         returns the index of the action to perform
         """
         self._main.observation = state
-        action = self._jl.eval("act!(agent, observation)")
+        action_index = self._jl.eval("act!(agent, observation)")
         # TODO: check if action is correctly returned,
         # and check if action should be in the range (1, num actions) 
         # or (0, num_actions)
-        return action - 1 # -1 because julia is 1-based, while python is 0-based
+        action_index -= 1  # -1 because julia is 1-based, while python is 0-based
+        assert action_index in range(len(self.action_space)), f"action index '{action_index}' not in allowed action_space indexing (action space: {self.action_space})"
+        return action_index
         
     def _add_experience(self, state, action_index, reward, next_state, done: bool):
         """
@@ -79,10 +81,14 @@ class DQNHybrid(Agent):
         self._jl.eval("reward_ban = parse_ban_from_array(reward_list, ban_size)")
         self._jl.eval("action_index=convert(Int32, action_index)")
         self._jl.eval("add_experience!(agent,state,action_index, reward_ban, next_state, done)")
-        return super()._add_experience(state, action_index, reward, next_state, done)
+        # this agent does not store the timesteps in Python,
+        #  since those would not be accessed by this implementation
+        #return super()._add_experience(state, action_index, reward, next_state, done)
 
     def _experience_replay(self):
-        if len(self.memory) < self.train_start:
-            return
+        # the following check is performed by julia method
+        # 'experience_replay!()'
+        #if len(self.memory) < self.train_start:
+        #    return
         self._jl.eval("experience_replay!(agent)")
-        #return super()._experience_replay()
+        
