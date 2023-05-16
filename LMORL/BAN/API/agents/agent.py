@@ -44,6 +44,9 @@ class Agent(ABC):
         return self.ban_size
 
     def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None):
+        """
+        returns rewards, avg_rewards, timings
+        """
         # we need to know the size of the reward, 
         # that same size will be used for BANs dimension
         #reward_dim = env.get_reward_dim()
