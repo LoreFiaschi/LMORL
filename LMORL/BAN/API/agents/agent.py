@@ -1,10 +1,34 @@
 import mo_gymnasium as mo_gym
 from LMORL.Environment import Environment
 
-from datetime import datetime
+from timestep import Timestep
 
-class Agent:
-    def __init__(self) -> None:
+from agent import Agent
+from julia.api import Julia
+
+from julia import Main
+
+from datetime import datetime
+from abc import ABC, abstractmethod
+
+class Agent(ABC):
+    def __init__(self, input_size : int, num_actions : int, action_space, ban_size : int, max_memory_size : int = 100, train_start : int = 100) -> None:
+        
+        self.input_size = input_size
+        self.num_actions = num_actions
+        self.action_space = action_space
+        
+        self.max_memory_size = max_memory_size
+        self.train_start = train_start
+        self.memory = []
+        self.ban_size = ban_size
+
+        self._jl = Julia(compiled_modules=False)
+        self._main = Main
+        
+        # TODO: decide if the right version of BAN library has to be included here
+
+        # self._jl.eval('include("julia-test-1.jl")')
         pass
 
     def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None):
@@ -15,7 +39,7 @@ class Agent:
         rewards = []
         avg_rewards = []
 
-        timings = [0]
+        timings = [0]   #TODO: should this list be empty?
 
         solved = False
 
@@ -28,13 +52,14 @@ class Agent:
             totrew = 0
             while not done:
                 start_time = datetime.now()
-                action = self._act(state)   # TODO: check how to modify the state
-                next_state,reward,done=self._ban_step(env)
+                action_index = self._act(state)
+                action = self.action_space[action]
+                next_state,reward,done=self._ban_step(env, action)
                 # reward is MO, then it is a list
                 # totrew+=reward
                 totrew = [sum(foo) for foo in zip(totrew, reward)]
 
-                self._add_experience(state,action,reward,next_state,done)
+                self._add_experience(state,action_index,reward,next_state,done)
                 state=next_state
                 t+=1
                 if t % replay_frequency==0 :
@@ -65,25 +90,50 @@ class Agent:
 
         return rewards, avg_rewards, timings
 
+    @abstractmethod
     def _act(self, state):
         """
-        returns the action to perform and updates the state
+        returns the index of the action to perform
+        - agent dependent
         """
-        # TODO: check how to modify the state
+        # TODO
+
         pass
 
-    def _ban_step(self, env : Environment):
+    def _ban_step(self, env : Environment, action):
         """
         returns next_state,reward,done
+        - the reward is returned as a list
         """
+        state, reward, done, information = env.step(action)
+
+        # (in the case the reward has to be returned as a BAN):
+        # TODO: consider if it is needed to check if 
+        # the reward's first component is <> 0 or not (ref 4571)
+
+        #TODO: at the moment the reward is returned as an array, not a BAN
+        return state, reward, done, information
+
+    def _add_experience(self, state,action,reward,next_state,done : bool):
+        """
+        stores the information about the last episode in agent memory
+        """
+        episode = Timestep(state, action, reward, next_state, done)
+        if len(self.memory) >= self.max_memory_size:
+            self.memory.pop(0)
+        self.memory.append(episode)
+
+    @abstractmethod
+    def _experience_replay(self):
+        """
+        it depends on the agent type, must be implemented in the derived class
+        """
+        if len(self.memory) < self.train_start:
+            return
+        
         pass
 
-    def _add_experience(state,action,reward,next_state,done):
-        pass
-
-    def _experience_replay():
-        pass
-
+    #@abstractmethod
     def _episode_end():
         """
         this method is called at each episode end,
@@ -91,5 +141,5 @@ class Agent:
         """
         pass
 
-    def _dump_model_to_file(mname):
+    def _dump_model_to_file(self, mname):
         pass
