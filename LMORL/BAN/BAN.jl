@@ -665,7 +665,7 @@ Base.promote_rule(::Type{Ban}, ::Type{T}) where T <: Real = Ban
 #Base.float(a::Ban) = (a.p == 0) ? convert(Float64, a[1]) : ((a.p > 0) ? Inf : zero(Float64))
 #Base.Float64(a::Ban) = (a.p == 0) ? convert(Float64, a[1]) : ((a.p > 0) ? Inf : zero(Float64))
 #Base.Int64(a::Ban) = (a.p == 0) ? convert(Int64, a[1]) : ((a.p > 0) ? Inf : zero(Int64))
-#Base.real(a::Ban) = (a.p == 0) ? a[1] : ((a.p > 0) ? Inf : zero(a[1]))
+Base.real(a::Ban) = (a.p == 0) ? a[1] : ((a.p > 0) ? Inf : zero(a[1]))
 
 Base.copysign(a::Ban, b::Ban) = ifelse(signbit(a.num[1])!=signbit(b.num[1]), -a, +a)
 # Maintained to speed up performances

@@ -861,6 +861,7 @@ function _setindex!(A::Hermitian{T,S}, v, i::Integer, j::Integer) where {T<:Abst
 end
 
 # Needed beacuse the library requests real(::Ban)
+Base.real(a::Ban) = (a.p == 0) ? a[1] : ((a.p > 0) ? Inf : zero(a[1]))
 # Elementary reflection similar to LAPACK. The reflector is not Hermitian but
 # ensures that tridiagonalization of Hermitian matrices become real. See lawn72
 @inline function LinearAlgebra.reflector!(x::AbstractVector{T}) where T<:AbstractAlgNum
