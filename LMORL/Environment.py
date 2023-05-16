@@ -1,5 +1,5 @@
 from gymnasium import Env
-from mo_gymnasium.utils
+#from mo_gymnasium.utils
 
 class Environment(Env):
     """
