@@ -5,7 +5,14 @@ for p in ( "Format","PyPlot","Distributions","Parameters","Flux","ChainRulesCore
     end
 end
 
-include("../BAN.jl") #include("../BAN_s3_isbits.jl")
+if BAN_SIZE == 3:
+    include("../BAN_s3_isbits.jl")
+else if BAN_SIZE == 2:
+    include("../BAN.jl")
+else:
+    SIZE = BAN_SIZE
+    include("../BAN.jl")
+#include("../BAN_s3_isbits.jl")
 include("../BanPlots.jl")
 
 using Distributions
@@ -27,10 +34,12 @@ Ban_glorot_uniform(rng::AbstractRNG) = (dims...) -> Ban_glorot_uniform(rng, dims
 function banStep(env, action)
     state, r, done, information = step!(env, action)
     i=0
+    #(ref 4571)
     while r[1]==0
         r=circshift(r,-1)
         i-=1
     end
+    # end 4571
     reward=Ban(i,r,false)
     return state,reward,done,information
 end
@@ -200,7 +209,7 @@ function hybrid_agent_learning(env, agent, episodes,mname,reward_threshold)
         update_target_model!(agent)
         update_epsilon!(agent)
         append!(rewards,totrew)
-        if i%50==0
+        if i%50==0  #50 aka dump_period
             weights=Flux.params(agent.model)
             BSON.@save mname weights
         end

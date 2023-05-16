@@ -27,6 +27,7 @@ class Agent(ABC):
         self._main = Main
         
         # TODO: decide if the right version of BAN library has to be included here
+        self._main.BAN_SIZE = self.ban_size
 
         # self._jl.eval('include("julia-test-1.jl")')
         pass
