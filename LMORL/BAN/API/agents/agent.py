@@ -102,7 +102,9 @@ class Agent(ABC):
                 avg_reward = [sum(comp)/i for comp in zip(*rewards)]
 
             avg_rewards.append(avg_reward)
-            print(f"Episode {i} - reward: {totrew} | 100AvgReward: {avg_reward}")
+            now = datetime.now()
+            print_time = now.strftime("%H:%M:%S")
+            print(f"{print_time}\tEpisode\t{i} - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             i+=1
     
         return rewards, avg_rewards, timings
