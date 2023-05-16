@@ -665,7 +665,7 @@ Base.promote_rule(::Type{Ban}, ::Type{T}) where T <: Real = Ban
 #Base.float(a::Ban) = (a.p == 0) ? convert(Float64, a[1]) : ((a.p > 0) ? Inf : zero(Float64))
 #Base.Float64(a::Ban) = (a.p == 0) ? convert(Float64, a[1]) : ((a.p > 0) ? Inf : zero(Float64))
 #Base.Int64(a::Ban) = (a.p == 0) ? convert(Int64, a[1]) : ((a.p > 0) ? Inf : zero(Int64))
-#Base.real(a::Ban) = (a.p == 0) ? a[1] : ((a.p > 0) ? Inf : zero(a[1]))
+Base.real(a::Ban) = (a.p == 0) ? a[1] : ((a.p > 0) ? Inf : zero(a[1]))
 
 Base.copysign(a::Ban, b::Ban) = ifelse(signbit(a.num[1])!=signbit(b.num[1]), -a, +a)
 # Maintained to speed up performances
@@ -914,77 +914,78 @@ end
 
 
 #Generalize to the case of Union{AbstractAlgNum, Real}
-LinearAlgebra.naivesub!(A::UpperTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
-function _naivesub!(A::UpperTriangular, b::AbstractVector, x::AbstractVector = b)
-    Base.require_one_based_indexing(A, b, x)
-    n = size(A, 2)
-    if !(n == length(b) == length(x))
-        throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
-    end
-    @inbounds for j in n:-1:1
-        iszero(A.data[j,j]) && throw(SingularException(j))
-#        xj = x[j] = denoise(A.data[j,j] \ b[j], 1e-10)
-        xj = x[j] = A.data[j,j] \ b[j]
-        for i in j-1:-1:1 # counterintuitively 1:j-1 performs slightly better
-#            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
-            b[i] = b[i] - A.data[i,j] * xj
-        end
-    end
-    x
-end
 
-LinearAlgebra.naivesub!(A::UnitUpperTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
-function _naivesub!(A::UnitUpperTriangular, b::AbstractVector, x::AbstractVector = b)
-    Base.require_one_based_indexing(A, b, x)
-    n = size(A, 2)
-    if !(n == length(b) == length(x))
-        throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
-    end
-    @inbounds for j in n:-1:1
-        xj = x[j] = b[j]
-        for i in j-1:-1:1 # counterintuitively 1:j-1 performs slightly better
-#            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
-            b[i] = b[i] - A.data[i,j] * xj
-        end
-    end
-    x
-end
+# LinearAlgebra.naivesub!(A::UpperTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
+# function _naivesub!(A::UpperTriangular, b::AbstractVector, x::AbstractVector = b)
+#     Base.require_one_based_indexing(A, b, x)
+#     n = size(A, 2)
+#     if !(n == length(b) == length(x))
+#         throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
+#     end
+#     @inbounds for j in n:-1:1
+#         iszero(A.data[j,j]) && throw(SingularException(j))
+# #        xj = x[j] = denoise(A.data[j,j] \ b[j], 1e-10)
+#         xj = x[j] = A.data[j,j] \ b[j]
+#         for i in j-1:-1:1 # counterintuitively 1:j-1 performs slightly better
+# #            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
+#             b[i] = b[i] - A.data[i,j] * xj
+#         end
+#     end
+#     x
+# end
 
-LinearAlgebra.naivesub!(A::LowerTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
-function _naivesub!(A::LowerTriangular, b::AbstractVector, x::AbstractVector = b)
-    Base.require_one_based_indexing(A, b, x)
-    n = size(A, 2)
-    if !(n == length(b) == length(x))
-        throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
-    end
-    @inbounds for j in 1:n
-        iszero(A.data[j,j]) && throw(SingularException(j))
-#        xj = x[j] = denoise(A.data[j,j] \ b[j], 1e-10)
-        xj = x[j] = A.data[j,j] \ b[j]
-        for i in j+1:n
-#            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
-            b[i] = b[i] - A.data[i,j] * xj
-        end
-    end
-    x
-end
+# LinearAlgebra.naivesub!(A::UnitUpperTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
+# function _naivesub!(A::UnitUpperTriangular, b::AbstractVector, x::AbstractVector = b)
+#     Base.require_one_based_indexing(A, b, x)
+#     n = size(A, 2)
+#     if !(n == length(b) == length(x))
+#         throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
+#     end
+#     @inbounds for j in n:-1:1
+#         xj = x[j] = b[j]
+#         for i in j-1:-1:1 # counterintuitively 1:j-1 performs slightly better
+# #            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
+#             b[i] = b[i] - A.data[i,j] * xj
+#         end
+#     end
+#     x
+# end
 
-LinearAlgebra.naivesub!(A::UnitLowerTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
-function _naivesub!(A::UnitLowerTriangular, b::AbstractVector, x::AbstractVector = b)
-    Base.require_one_based_indexing(A, b, x)
-    n = size(A, 2)
-    if !(n == length(b) == length(x))
-        throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
-    end
-    @inbounds for j in 1:n
-        xj = x[j] = b[j]
-        for i in j+1:n
-#            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
-            b[i] = b[i] - A.data[i,j] * xj
-        end
-    end
-    x
-end
+# LinearAlgebra.naivesub!(A::LowerTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
+# function _naivesub!(A::LowerTriangular, b::AbstractVector, x::AbstractVector = b)
+#     Base.require_one_based_indexing(A, b, x)
+#     n = size(A, 2)
+#     if !(n == length(b) == length(x))
+#         throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
+#     end
+#     @inbounds for j in 1:n
+#         iszero(A.data[j,j]) && throw(SingularException(j))
+# #        xj = x[j] = denoise(A.data[j,j] \ b[j], 1e-10)
+#         xj = x[j] = A.data[j,j] \ b[j]
+#         for i in j+1:n
+# #            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
+#             b[i] = b[i] - A.data[i,j] * xj
+#         end
+#     end
+#     x
+# end
+
+# LinearAlgebra.naivesub!(A::UnitLowerTriangular{T}, b::AbstractVector{T}, x::AbstractVector{T} = b) where T<:AbstractAlgNum = _naivesub!(A, b, x)
+# function _naivesub!(A::UnitLowerTriangular, b::AbstractVector, x::AbstractVector = b)
+#     Base.require_one_based_indexing(A, b, x)
+#     n = size(A, 2)
+#     if !(n == length(b) == length(x))
+#         throw(DimensionMismatch("second dimension of left hand side A, $n, length of output x, $(length(x)), and length of right hand side b, $(length(b)), must be equal"))
+#     end
+#     @inbounds for j in 1:n
+#         xj = x[j] = b[j]
+#         for i in j+1:n
+# #            b[i] = denoise(b[i] - A.data[i,j] * xj, 1e-10)
+#             b[i] = b[i] - A.data[i,j] * xj
+#         end
+#     end
+#     x
+# end
 
 end
 

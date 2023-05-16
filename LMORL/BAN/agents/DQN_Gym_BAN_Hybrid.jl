@@ -1,9 +1,9 @@
-using Pkg;
-for p in ( "Format","PyPlot","Distributions","Parameters","Flux","ChainRulesCore","ProgressBars","Gym")
-    if (Pkg.status(p) == nothing)
-         Pkg.add(p)
-    end
-end
+# using Pkg;
+# for p in ( "Format","PyPlot","Distributions","Parameters","Flux","ChainRulesCore","ProgressBars","Gym","BSON","Zygote")
+#     if (Pkg.status(p) == nothing)
+#          Pkg.add(p)
+#     end
+# end
 
 if BAN_SIZE == 3:
     include("../BAN_s3_isbits.jl")
@@ -28,6 +28,7 @@ using Gym
 
 Random.seed!(777)
 rng=MersenneTwister(777)
+
 Ban_glorot_uniform(rng::AbstractRNG, dims...) = (rand(rng, Ban, dims...) .- (0.5*Ban(0,[1.0,1.0,1.0],false))) .* sqrt(24.0*Ban(0,[1.0,1.0,1.0],false) / sum(Flux.nfan(dims...)))
 Ban_glorot_uniform(rng::AbstractRNG) = (dims...) -> Ban_glorot_uniform(rng, dims...)
 
@@ -188,7 +189,7 @@ function hybrid_agent_learning(env, agent, episodes,mname,reward_threshold)
     solved=false
     i=1
     while i<=episodes && !solved
-        state=reset!(env)
+        state, information=reset!(env)
         done=false
         t=0
         totrew=0
@@ -238,29 +239,31 @@ end
 ############## SETUP ###################
 ########################################
 
-#using BSON
-#using Zygote
-#Random.seed!(777)
-#Random.seed!(rng,777)
-#env = GymEnv("LunarLander-v2")
-#st=reset!(env)
-#inputsize=length(st)
-#episodes=50
-#actions=[0,1,2,3]
-#reward_threshold=200
-#replay_frequency=1
-#agent=DQNAgent(input_size=inputsize,numactions=4,actionspace=actions,max_memory=100000,learning_rate= 0.0001,epsilon_decay = 0.995,epsilon_min=0.1, batch_size=64,train_start=64,hidden_size=128)
-#solved=false
-#mname="TESTTIMEHYBDQN.bson"
-#agent.target_model=deepcopy(agent.model)
-
-#reward_threshold=200
-#rewards,avgrewards,timings= hybrid_agent_learning(env, agent, episodes, mname, reward_threshold)
-
-#################################
-#x=convert(Vector{Ban}, range(1,i-1))
-#plot(x,rewards,rlplot=true)
-####
-#x=convert(Vector{Ban}, range(1,i-1))
-#plot(x,avgrewards,rlplot=true)
+using BSON
+using Zygote
+Random.seed!(777)
+Random.seed!(rng,777)
+env = GymEnv("LunarLander-v2-mo-custom")
+st, foo = reset!(env)
+inputsize=length(st)
+#print(inputsize)
+episodes=200
+actions=[0,1,2,3]
+reward_threshold=200
+replay_frequency=1
+agent=DQNAgent(input_size=inputsize,numactions=4,actionspace=actions,max_memory=100000,learning_rate= 0.0001,epsilon_decay = 0.995,epsilon_min=0.1, batch_size=64,train_start=64,hidden_size=128)
+solved=false
+mname="TESTTIMEHYBDQN.bson"
+agent.target_model=deepcopy(agent.model)
+reward_threshold=200
+rewards,avgrewards,timings= hybrid_agent_learning(env, agent, episodes, mname, reward_threshold)
+################################
+x=convert(Vector{Ban}, range(1,episodes))
+#println(x)
+#println(rewards)
+plot(x,rewards,rlplot=true, figtitle="Foo")
+###
+x=convert(Vector{Ban}, range(1,episodes))
+plot(x,avgrewards,rlplot=true)
+PyPlot.show()
 ##################################
