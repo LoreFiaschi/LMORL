@@ -39,7 +39,9 @@ function banStep(env, action)
         i-=1
     end
     # end 4571
-    reward=Ban(i,r,false)
+    # modified banStep so that it works even
+    # when the reward size is higher than the BAN SIZE
+    reward=Ban(i,r[1:BAN_SIZE],false)
     return state,reward,done,information
 end
 
