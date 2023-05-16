@@ -1,4 +1,4 @@
-from agent import Agent
+from LMORL.BAN.API.agents.agent import Agent
 from julia.api import Julia
 
 from julia import Main
@@ -21,8 +21,8 @@ class DQNHybrid(Agent):
         self.batch_size = batch_size
         self.hidden_size = hidden_size
 
-        self._jl.eval("include('../../agents/DQN_Gym_BAN_Hybrid.jl')")
-        self._jl.eval("include('../../custom_BAN_utils.jl')")
+        self._jl.eval("include(\"../../agents/DQN_Gym_BAN_Hybrid.jl\")")
+        self._jl.eval("include(\"../../custom_BAN_utils.jl\")")
         # passing parameters to julia env
         self._main.inputsize = self.input_size
         self._main.numactions = self.num_actions
@@ -75,8 +75,10 @@ class DQNHybrid(Agent):
         self._main.reward_list = reward
         self._main.next_state = next_state
         self._main.done = done
+        self._main.ban_size = self._main.BAN_SIZE
         self._jl.eval("reward_ban = parse_ban_from_array(reward_list, ban_size)")
-        self._jl.eval("add_experience!(agent,state, action_index, reward_ban, next_state, done)")
+        self._jl.eval("action_index=convert(Int32, action_index)")
+        self._jl.eval("add_experience!(agent,state,action_index, reward_ban, next_state, done)")
         return super()._add_experience(state, action_index, reward, next_state, done)
 
     def _experience_replay(self):

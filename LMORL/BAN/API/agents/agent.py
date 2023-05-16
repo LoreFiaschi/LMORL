@@ -1,15 +1,16 @@
 import mo_gymnasium as mo_gym
 from LMORL.Environment import Environment
 
-from timestep import Timestep
+from LMORL.BAN.API.agents.timestep import Timestep
 
-from agent import Agent
 from julia.api import Julia
 
 from julia import Main
 
 from datetime import datetime
 from abc import ABC, abstractmethod
+import pathlib
+import numpy as np
 
 class Agent(ABC):
     def __init__(self, input_size : int, num_actions : int, action_space, ban_size : int, max_memory_size : int = 100, train_start : int = 100) -> None:
@@ -25,17 +26,27 @@ class Agent(ABC):
 
         self._jl = Julia(compiled_modules=False)
         self._main = Main
-        
+
+        path = pathlib.Path(__file__).parent.resolve()
+        path = str(path).replace("\\", "\\\\")
+        self._jl.eval(f"cd(\"{path}\")")
+
         # TODO: decide if the right version of BAN library has to be included here
         self._main.BAN_SIZE = self.ban_size
 
         # self._jl.eval('include("julia-test-1.jl")')
         pass
 
+    def _get_reward_dim(self):
+        """
+        consider if allow to use a lower ban_size than reward_dim
+        """
+        return self.ban_size
+
     def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None):
         # we need to know the size of the reward, 
         # that same size will be used for BANs dimension
-        reward_dim = env.get_reward_dim()
+        #reward_dim = env.get_reward_dim()
         
         rewards = []
         avg_rewards = []
@@ -47,15 +58,16 @@ class Agent(ABC):
         i = 1
 
         while i < episodes and not solved:
-            state = env.reset()
+            state, infos = env.reset()
             done = False
             t = 0
-            totrew = 0
+            totrew = [0] * self._get_reward_dim()
             while not done:
                 start_time = datetime.now()
                 action_index = self._act(state)
-                action = self.action_space[action]
-                next_state,reward,done=self._ban_step(env, action)
+                action = self.action_space[action_index]
+                next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
+                done = bool( terminated or truncated )
                 # reward is MO, then it is a list
                 # totrew+=reward
                 totrew = [sum(foo) for foo in zip(totrew, reward)]
@@ -88,7 +100,8 @@ class Agent(ABC):
 
             avg_rewards.append(avg_reward)
             print(f"Episode {i} - reward: {totrew} | 100AvgReward: {avg_reward}")
-
+            i+=1
+    
         return rewards, avg_rewards, timings
 
     @abstractmethod
@@ -106,14 +119,14 @@ class Agent(ABC):
         returns next_state,reward,done
         - the reward is returned as a list
         """
-        state, reward, done, information = env.step(action)
+        state, reward, terminated, truncated, information = env.step(action)
 
         # (in the case the reward has to be returned as a BAN):
         # TODO: consider if it is needed to check if 
         # the reward's first component is <> 0 or not (ref 4571)
-
+        assert type(reward) in [list, np.ndarray], f"[!] reward type is {type(reward)} instead of list or ndarray, content: {reward}"
         #TODO: at the moment the reward is returned as an array, not a BAN
-        return state, reward, done, information
+        return state, reward, terminated, truncated, information
 
     def _add_experience(self, state,action,reward,next_state,done : bool):
         """
