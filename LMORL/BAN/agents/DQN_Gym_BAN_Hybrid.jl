@@ -22,6 +22,8 @@ using ChainRulesCore
 using ProgressBars
 using LinearAlgebra
 using Gym
+#https://docs.julialang.org/en/v1/manual/modules/
+using Main.BAN: Ban
 
 
 Random.seed!(777)
