@@ -45,12 +45,14 @@ function banStep(env, action)
     return state,reward,done,information
 end
 
+StateType=Union{Array{Float32,1},Array{Int32,1}}
+
 
 @with_kw mutable struct Replay
-    state::Array{Float32,1}
+    state::StateType
     action::Int32
     reward::Ban
-    next_state::Array{Float32,1}
+    next_state::StateType
     done::Bool
 end
 
@@ -66,7 +68,7 @@ end
     learning_rate::Float32 = 0.1
     numactions::Int32 
     actionspace::Array{Int32,1}
-    previous_state::Array{Int32,1}=zeros(2)
+    #previous_state::StateType=zeros(2)
     action::Int32=0
     memory::Vector{Replay}=Vector{Replay}(undef,0)
     input_size::Int32=2
@@ -83,7 +85,7 @@ end
     
 end
 
-function act!(agent::DQNAgent,observation::Array{Float32,1})
+function act!(agent::DQNAgent,observation::StateType)
     if rand(Uniform())>agent.epsilon
         q_value=agent.model(observation)
         agent.action=argmax(q_value)
@@ -94,7 +96,7 @@ function act!(agent::DQNAgent,observation::Array{Float32,1})
 end
 
 #IMPLEMENTATION WITH FIXED MEMORY POSITION ARRAY
-function add_experience!(agent::DQNAgent,state::Array{Float32,1},action::Int32,reward::Ban,next_state::Array{Float32,1},done::Bool)
+function add_experience!(agent::DQNAgent,state::StateType,action::Int32,reward::Ban,next_state::StateType,done::Bool)
     
     if agent.occupied_memory < agent.max_memory
         r=Replay(state,action,reward,next_state,done)
@@ -125,14 +127,14 @@ end
 #end
 
 
-#TOTEST: a method to store a vector of timesteps in batch
-function add_experience_batch!(agent::DQNAgent,state::Array{Float32,2},action::Array{Int32,1},reward::Array{Ban,1},next_state::Array{Float32,2},done::Array{Bool,1}, how_many::Int64)
-    for index in 1:how_many
-        add_experience!(agent, state[index], action[index], reward[index], next_state[index], done[index])
-    end
-end
+##TOTEST: a method to store a vector of timesteps in batch
+#function add_experience_batch!(agent::DQNAgent,state::Array{Float32,2},action::Array{Int32,1},reward::Array{Ban,1},next_state::Array{Float32,2},done::Array{Bool,1}, how_many::Int64)
+#    for index in 1:how_many
+#        add_experience!(agent, state[index], action[index], reward[index], next_state[index], done[index])
+#    end
+#end
 
-function get_target_q_value(agent::DQNAgent,next_state::Array{Float32,1})
+function get_target_q_value(agent::DQNAgent,next_state::StateType)
     max_q_value= maximum(agent.target_model(next_state))
     return max_q_value
 end
