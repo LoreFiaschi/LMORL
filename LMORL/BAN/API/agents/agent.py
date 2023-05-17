@@ -57,7 +57,7 @@ class Agent(ABC):
         img_frame = Image.fromarray(frame)
 
         plt.figure(1); plt.clf()
-        plt.title(f'Episode: {episode+1}')
+        plt.title(f'Episode: {episode}')
         plt.imshow(img_frame)
         plt.pause(0.01)
 
@@ -78,7 +78,7 @@ class Agent(ABC):
 
         i = 1
 
-        while i < episodes and not solved:
+        while i <= episodes and not solved:
             begin_episode_time = datetime.now()
             state, infos = env.reset()
             done = False
@@ -120,7 +120,7 @@ class Agent(ABC):
 
             if i >= 100:
                 # https://www.geeksforgeeks.org/python-ways-to-sum-list-of-lists-and-return-sum-list/
-                avg_reward = [sum(comp[i - 100 : i - 1])/100 for comp in zip(*rewards)]
+                avg_reward = [sum(comp[i - 100 : i ])/100 for comp in zip(*rewards)]
                 #( sum(rewards[i - 100: i - 1]) ) / 100  --> not sium because reward is a NA vector
 
                 # TODO: consider if adding an exit condition that use as threshold the
