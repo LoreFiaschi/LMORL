@@ -61,7 +61,7 @@ class Agent(ABC):
         plt.imshow(img_frame)
         plt.pause(0.01)
 
-    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None, render : bool = False):
+    def agent_learning(self, env : Environment, episodes : int, mname : str, learn_at_episode_end : bool = True, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None, render : bool = False):
         """
         returns rewards, avg_rewards, timings
         """
@@ -72,7 +72,7 @@ class Agent(ABC):
         rewards = []
         avg_rewards = []
 
-        timings = [0]   #TODO: should this list be empty?
+        timings = []   #TODO: should this list be empty?
 
         solved = False
 
@@ -105,11 +105,13 @@ class Agent(ABC):
                 self._add_experience(state,action_index,reward,next_state,done)
                 state=next_state
                 t+=1
-                if t % replay_frequency==0 :
+                if not learn_at_episode_end and t % replay_frequency==0 :
                     self._experience_replay()
                 tmng = ( datetime.now() - start_time ).total_seconds()
                 timings.append(tmng)
-            
+
+            if learn_at_episode_end:
+                self._experience_replay()
             self._episode_end()
 
             rewards.append(totrew)
