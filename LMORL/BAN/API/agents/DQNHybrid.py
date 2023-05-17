@@ -73,11 +73,11 @@ class DQNHybrid(Agent):
         returns the index of the action to perform
         """
         before = datetime.now()
-        self._main.observation = state
-        action_index = self._julia_eval("act!(agent, observation)")
-        # TODO: check if action is correctly returned,
-        # and check if action should be in the range (1, num actions) 
-        # or (0, num_actions)
+        #self._main.observation = state
+        #action_index = self._julia_eval("act!(agent, observation)")
+        
+        action_index = self._main.act_b(self._main.agent, state)
+        
         action_index -= 1  # -1 because julia is 1-based, while python is 0-based
         #if DEBUG: assert action_index in range(len(self.action_space)), f"action index '{action_index}' not in allowed action_space indexing (action space: {self.action_space})"
         if DEBUG: 
@@ -93,19 +93,37 @@ class DQNHybrid(Agent):
         that they happen
         """
         before = datetime.now()
-        self._main.state = state
-        self._main.action_index = action_index + 1 #because julia is 1-based, while python is 0-based
-        self._main.reward_list = reward
-        self._main.next_state = next_state
-        self._main.done = done
-        self._main.ban_size = self._main.BAN_SIZE
-        self._julia_eval("reward_ban = parse_ban_from_array(reward_list, ban_size)")
-        self._julia_eval("action_index=convert(Int32, action_index)")
-        self._julia_eval("add_experience!(agent,state,action_index, reward_ban, next_state, done)")
+        self._main.add_experience_custom_types_b(self._main.agent, state,action_index+1, reward, next_state, done)
+
         if DEBUG: 
             elapsed = (datetime.now() - before).total_seconds()
             if elapsed > ELAPSED_THRESHOLD:
                 print(f"add_experience! took {elapsed} seconds")
+
+        return
+        #before = datetime.now()
+        #self._main.state = state
+        #self._main.action_index = action_index + 1 #because julia is 1-based, while python is 0-based
+        #self._main.reward_list = reward
+        #self._main.next_state = next_state
+        #self._main.done = done
+        #self._main.ban_size = self._main.BAN_SIZE
+        #after_passing = datetime.now()
+        #cmd_string = """
+        #reward_ban = parse_ban_from_array(reward_list, ban_size)
+        #action_index=convert(Int32, action_index)
+        #add_experience!(agent,state,action_index, reward_ban, next_state, done)
+        #"""
+        #self._julia_eval(cmd_string)
+        ##self._julia_eval("reward_ban = parse_ban_from_array(reward_list, ban_size)")
+        ##self._julia_eval("action_index=convert(Int32, action_index)")
+        ##self._julia_eval("add_experience!(agent,state,action_index, reward_ban, next_state, done)")
+        #if DEBUG: 
+        #    elapsed = (datetime.now() - before).total_seconds()
+        #    elapsed_passing = (after_passing - before).total_seconds()
+        #    if elapsed > ELAPSED_THRESHOLD:
+        #        print(f"add_experience! took {elapsed} seconds\telapsed passing params: {elapsed_passing}")
+        
         # this agent does not store the timesteps in Python,
         #  since those would not be accessed by this implementation
         #return super()._add_experience(state, action_index, reward, next_state, done)
