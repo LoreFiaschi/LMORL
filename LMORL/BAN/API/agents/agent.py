@@ -38,18 +38,16 @@ class Agent(ABC):
         path = str(path).replace("\\", "\\\\")
         self._julia_eval(f"cd(\"{path}\")")
 
-        # TODO: decide if the right version of BAN library has to be included here
+        # DONE: decide if the right version of BAN library has to be included here
+        # the include is performed inside jl file of the agent
         self._main.BAN_SIZE = self.ban_size
-
-        # self._julia_eval('include("julia-test-1.jl")')
-        pass
     
     def _julia_eval(self, cmd_string : str):
         return self._jl.eval(cmd_string)
 
     def _get_reward_dim(self):
         """
-        consider if allow to use a lower ban_size than reward_dim
+        TODO: consider if allow to use a lower ban_size than reward_dim
         """
         return self.ban_size
 
@@ -88,7 +86,7 @@ class Agent(ABC):
             totrew = [0] * self._get_reward_dim()
             while not done:
                 start_time = datetime.now()
-                action_index = self._act(state)
+                action_index = self.act(state)
                 action = self.action_space[action_index]
                 next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
                 # render environment animation
@@ -117,7 +115,8 @@ class Agent(ABC):
             rewards.append(totrew)
 
             if i % dump_period == 0:
-                self._dump_model_to_file(mname)
+                # TODO: allow to disable the dump and to customize dumping policy
+                self.dump_model_to_file(mname)
 
             if i >= 100:
                 # https://www.geeksforgeeks.org/python-ways-to-sum-list-of-lists-and-return-sum-list/
@@ -140,7 +139,7 @@ class Agent(ABC):
         return rewards, avg_rewards, timings
 
     @abstractmethod
-    def _act(self, state):
+    def act(self, state):
         """
         returns the index of the action to perform
         - agent dependent
@@ -148,6 +147,8 @@ class Agent(ABC):
         print("Agent._act() method without implementation was called! You have to implement custom agent's act method!")
 
         pass
+
+
 
     def _ban_step(self, env : Environment, action):
         """
@@ -194,5 +195,11 @@ class Agent(ABC):
         """
         pass
 
-    def _dump_model_to_file(self, mname):
+    def dump_model_to_file(self, model_filename : str):
+        # TODO: implement this method (understand if it is agent-dependent)
+        pass
+
+    def load_model_from_file(self, model_filepath : str):
+        # TODO: implement this method (understand if it is agent-dependent)
+        # refer to: "https://github.com/LoreFiaschi/DeepLearning/test/DQN_LL_BAN - Test.ipynb"
         pass

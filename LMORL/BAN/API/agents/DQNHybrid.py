@@ -68,7 +68,7 @@ class DQNHybrid(Agent):
             if elapsed > ELAPSED_THRESHOLD:
                 print(f"update_epsilon! took {elapsed} seconds")
 
-    def _act(self, state):
+    def act(self, state):
         """
         returns the index of the action to perform
         """
