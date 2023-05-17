@@ -148,6 +148,42 @@ class Agent(ABC):
 
         pass
 
+    def run_episode(self, env : Environment, render : bool = False):
+        """
+        - return totrew, elapsed_episode
+        """
+        solved = False
+
+        begin_episode_time = datetime.now()
+        state, infos = env.reset()
+        done = False
+        timestep = 0
+        totrew = [0] * self._get_reward_dim()
+        while not done:
+            #start_time = datetime.now()
+            action_index = self.act(state)
+            action = self.action_space[action_index]
+            next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
+            # render environment animation
+            if render:
+                self._render(env, "", timestep)
+            done = bool( terminated or truncated )
+
+            totrew = [sum(foo) for foo in zip(totrew, reward)]
+
+            #self._add_experience(state,action_index,reward,next_state,done)
+            state=next_state
+            timestep+=1
+
+            #tmng = ( datetime.now() - start_time ).total_seconds()
+        end_episode_time = datetime.now()
+        elapsed_episode = (end_episode_time - begin_episode_time).total_seconds()
+
+        print_time = end_episode_time.strftime("%H:%M:%S")
+        print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
+    
+        return totrew, elapsed_episode
+
 
 
     def _ban_step(self, env : Environment, action):
