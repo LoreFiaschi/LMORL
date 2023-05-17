@@ -20,6 +20,11 @@ function parse_ban_from_array(reward_list, ban_size)
     while reward_list[1]==0
         reward_list= circshift(reward_list, -1)
         p -= 1
+        if p <= -(ban_size)
+            #prevent infinite loop in case of zeros reward
+            p = 0
+            break
+        end
     end
     reward_ban = Ban(p, reward_list, false)
     return reward_ban
