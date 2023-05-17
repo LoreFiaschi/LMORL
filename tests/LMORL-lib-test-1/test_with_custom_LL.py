@@ -1,7 +1,11 @@
 import sys
+import os
+from pathlib import Path
 
-if "C:\programmazione\LMORL" not in sys.path:
-  sys.path.append("C:\programmazione\LMORL")
+root_dir = Path(os.getcwd())
+
+if str(root_dir.parents[1]) not in sys.path:
+  sys.path.append(str(root_dir.parents[1]))
 
 #print(sys.path)
 
