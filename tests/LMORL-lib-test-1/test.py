@@ -32,7 +32,7 @@ agent = DQNHybrid(input_size=input_size, num_actions=num_actions,
                   batch_size=batch_size, hidden_size=hidden_size,
                   ban_size=3, max_memory_size=100, train_start=100)
 
-episodes = 50
+episodes = 350
 mname = "fooo.model"
 
 rewards, avg_rewards, timings = agent.agent_learning(env=env,episodes = episodes, mname=mname)
