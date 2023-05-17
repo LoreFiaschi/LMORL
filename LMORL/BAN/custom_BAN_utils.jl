@@ -25,3 +25,7 @@ function parse_ban_from_array(reward_list, ban_size)
     return reward_ban
 
 end
+
+function add_experience_custom_types!(agent::DQNAgent, state::Array{Float32,1},action_index::Int64,reward_list::Array{Float64,1},next_state::Array{Float32,1},done::Bool)
+    add_experience!(agent,state,convert(Int32, action_index), parse_ban_from_array(reward_list, BAN_SIZE), next_state, done)
+end
