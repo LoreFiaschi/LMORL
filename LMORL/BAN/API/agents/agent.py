@@ -29,13 +29,16 @@ class Agent(ABC):
 
         path = pathlib.Path(__file__).parent.resolve()
         path = str(path).replace("\\", "\\\\")
-        self._jl.eval(f"cd(\"{path}\")")
+        self._julia_eval(f"cd(\"{path}\")")
 
         # TODO: decide if the right version of BAN library has to be included here
         self._main.BAN_SIZE = self.ban_size
 
-        # self._jl.eval('include("julia-test-1.jl")')
+        # self._julia_eval('include("julia-test-1.jl")')
         pass
+    
+    def _julia_eval(self, cmd_string : str):
+        return self._jl.eval(cmd_string)
 
     def _get_reward_dim(self):
         """
