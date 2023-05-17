@@ -42,3 +42,18 @@ episodes = 350
 mname = "fooo.model"
 
 rewards, avg_rewards, timings = agent.agent_learning(env=env,episodes = episodes, mname=mname, render=False)
+
+
+"""
+With 350 episodes, 
+learning_rate = 0.001
+epsilon_decay = 0.996
+epsilon_min = 0.1
+batch_size = 64
+train_start = 64
+hidden_size = 128
+BAN_SIZE = 3
+max_memory_size = 10000
+Results:
+Episode 349     timesteps:      277     Took    15.434138 sec - reward: [20.876232145678017, -100.0, -45.15000000000006]  | 100AvgReward: [-86.61653347279771, -98.0, -42.32069999999999]
+"""
