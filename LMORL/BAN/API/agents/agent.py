@@ -12,6 +12,9 @@ from abc import ABC, abstractmethod
 import pathlib
 import numpy as np
 
+DEBUG = True
+ELAPSED_THRESHOLD = 1
+
 class Agent(ABC):
     def __init__(self, input_size : int, num_actions : int, action_space, ban_size : int, max_memory_size : int = 100, train_start : int = 100) -> None:
         
@@ -24,7 +27,7 @@ class Agent(ABC):
         self.memory = []
         self.ban_size = ban_size
 
-        self._jl = Julia(compiled_modules=False)
+        self._jl = Julia(compiled_modules=True)
         self._main = Main
 
         path = pathlib.Path(__file__).parent.resolve()
@@ -64,6 +67,7 @@ class Agent(ABC):
         i = 1
 
         while i < episodes and not solved:
+            begin_episode_time = datetime.now()
             state, infos = env.reset()
             done = False
             t = 0
@@ -76,7 +80,12 @@ class Agent(ABC):
                 done = bool( terminated or truncated )
                 # reward is MO, then it is a list
                 # totrew+=reward
+                before = datetime.now()
                 totrew = [sum(foo) for foo in zip(totrew, reward)]
+                if DEBUG:
+                    elapsed = (datetime.now() - before).total_seconds()
+                    if elapsed > ELAPSED_THRESHOLD:
+                        print(f"sum(foo) for foo in zip(totrew, reward) took {elapsed} seconds")
 
                 self._add_experience(state,action_index,reward,next_state,done)
                 state=next_state
@@ -106,8 +115,9 @@ class Agent(ABC):
 
             avg_rewards.append(avg_reward)
             now = datetime.now()
+            elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
-            print(f"{print_time}\tEpisode\t{i} - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+            print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             i+=1
     
         return rewards, avg_rewards, timings
@@ -118,7 +128,7 @@ class Agent(ABC):
         returns the index of the action to perform
         - agent dependent
         """
-        # TODO
+        print("Agent._act() method without implementation was called! You have to implement custom agent's act method!")
 
         pass
 
@@ -130,16 +140,20 @@ class Agent(ABC):
         state, reward, terminated, truncated, information = env.step(action)
 
         # (in the case the reward has to be returned as a BAN):
-        # TODO: consider if it is needed to check if 
+        # consider if it is needed to check if
         # the reward's first component is <> 0 or not (ref 4571)
-        assert type(reward) in [list, np.ndarray], f"[!] reward type is {type(reward)} instead of list or ndarray, content: {reward}"
-        #TODO: at the moment the reward is returned as an array, not a BAN
+        # answer: this is done by the method add_experience() which has to call parse_ban_from_array(reward_list, ban_size) which
+        # is in charge of normalizing the BAN representation
+
+        #assert type(reward) in [list, np.ndarray], f"[!] reward type is {type(reward)} instead of list or ndarray, content: {reward}"
+        #currently the reward is returned as an array, not a BAN
         return state, reward, terminated, truncated, information
 
     def _add_experience(self, state,action,reward,next_state,done : bool):
         """
         stores the information about the last episode in agent memory
         """
+        print("+++++++++++ Agent._add_experience() was called ++++++++++++++++++")
         episode = Timestep(state, action, reward, next_state, done)
         if len(self.memory) >= self.max_memory_size:
             self.memory.pop(0)
