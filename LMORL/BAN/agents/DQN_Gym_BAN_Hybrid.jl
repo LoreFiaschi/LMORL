@@ -71,6 +71,8 @@ end
     memory::Vector{Replay}=Vector{Replay}(undef,0)
     input_size::Int32=2
     max_memory::Int32=100
+    occupied_memory::Int32=0
+    last_inserted_index::Int32=0
     hidden_size::Int32=10
     train_start::Int32=100
     input_layer=Dense(input_size,hidden_size,relu;init=Flux.glorot_uniform(rng))
@@ -91,12 +93,43 @@ function act!(agent::DQNAgent,observation::Array{Float32,1})
     return agent.action
 end
 
+#IMPLEMENTATION WITH FIXED MEMORY POSITION ARRAY
 function add_experience!(agent::DQNAgent,state::Array{Float32,1},action::Int32,reward::Ban,next_state::Array{Float32,1},done::Bool)
-    r=Replay(state,action,reward,next_state,done)
-    if length(agent.memory) == agent.max_memory
-        deleteat!(agent.memory, 1)
+    
+    if agent.occupied_memory < agent.max_memory
+        r=Replay(state,action,reward,next_state,done)
+        push!(agent.memory, r)
+        agent.occupied_memory+=1
+        agent.last_inserted_index += 1
+    else
+        agent.last_inserted_index=( (agent.last_inserted_index ) % 100 ) + 1
+        agent.memory[agent.last_inserted_index].state = state
+        agent.memory[agent.last_inserted_index].action = action
+        agent.memory[agent.last_inserted_index].reward = reward
+        agent.memory[agent.last_inserted_index].next_state = next_state
+        agent.memory[agent.last_inserted_index].done = done
+          
     end
-    push!(agent.memory, r)
+    
+end
+
+# OLD IMPLEMENTATION:
+#function add_experience!(agent::DQNAgent,state::Array{Float32,1},action::Int32,reward::Ban,next_state::Array{Float32,1},done::Bool)
+#    r=Replay(state,action,reward,next_state,done)
+#    if agent.occupied_memory >= agent.max_memory #length(agent.memory)
+#        popfirst!(agent.memory) #deleteat!(agent.memory, 1)
+#        agent.occupied_memory -= 1
+#    end
+#    push!(agent.memory, r)
+#    agent.occupied_memory+=1
+#end
+
+
+#TOTEST: a method to store a vector of timesteps in batch
+function add_experience_batch!(agent::DQNAgent,state::Array{Float32,2},action::Array{Int32,1},reward::Array{Ban,1},next_state::Array{Float32,2},done::Array{Bool,1}, how_many::Int64)
+    for index in 1:how_many
+        add_experience!(agent, state[index], action[index], reward[index], next_state[index], done[index])
+    end
 end
 
 function get_target_q_value(agent::DQNAgent,next_state::Array{Float32,1})
@@ -111,7 +144,7 @@ end
 
 
 function update_epsilon!(agent::DQNAgent)
-        if length(agent.memory) < agent.train_start
+        if agent.occupied_memory < agent.train_start#length(agent.memory) < agent.train_start
             return
         end
         if agent.epsilon > agent.epsilon_min
