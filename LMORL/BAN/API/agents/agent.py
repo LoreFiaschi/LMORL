@@ -12,6 +12,10 @@ from abc import ABC, abstractmethod
 import pathlib
 import numpy as np
 
+from PIL import Image
+import PIL.ImageDraw as ImageDraw
+import matplotlib.pyplot as plt 
+
 class Agent(ABC):
     def __init__(self, input_size : int, num_actions : int, action_space, ban_size : int, max_memory_size : int = 100, train_start : int = 100) -> None:
         
@@ -46,7 +50,17 @@ class Agent(ABC):
         """
         return self.ban_size
 
-    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None):
+    def _render(self, env, episode, timestep):
+
+        frame = env.render()
+        img_frame = Image.fromarray(frame)
+
+        plt.figure(1); plt.clf()
+        plt.title(f'Episode: {episode+1}')
+        plt.imshow(img_frame)
+        plt.pause(0.01)
+
+    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None, render : bool = False):
         """
         returns rewards, avg_rewards, timings
         """
@@ -73,6 +87,9 @@ class Agent(ABC):
                 action_index = self._act(state)
                 action = self.action_space[action_index]
                 next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
+                # render environment animation
+                if render:
+                    self._render(env, i, t)
                 done = bool( terminated or truncated )
                 # reward is MO, then it is a list
                 # totrew+=reward

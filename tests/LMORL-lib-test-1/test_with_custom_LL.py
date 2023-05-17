@@ -18,7 +18,7 @@ import gym
 # -LunarLander-v2-mo
 
 
-env = gym.make("LunarLander-v2-mo-custom")
+env = gym.make("LunarLander-v2-mo-custom", render_mode="rgb_array")
 
 input_size = env.observation_space.shape[0]
 num_actions = int(env.action_space.n)
@@ -40,4 +40,4 @@ agent = DQNHybrid(input_size=input_size, num_actions=num_actions,
 episodes = 50
 mname = "fooo.model"
 
-rewards, avg_rewards, timings = agent.agent_learning(env=env,episodes = episodes, mname=mname)
+rewards, avg_rewards, timings = agent.agent_learning(env=env,episodes = episodes, mname=mname, render=True)
