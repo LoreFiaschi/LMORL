@@ -5,7 +5,7 @@ from julia import Main
 
 from datetime import datetime
 
-DEBUG = True
+DEBUG = False
 ELAPSED_THRESHOLD = 1
 
 class DQNHybrid(Agent):
