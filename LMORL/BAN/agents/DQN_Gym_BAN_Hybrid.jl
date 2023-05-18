@@ -5,7 +5,7 @@
 if BAN_SIZE == 3
     include("../BAN_s3_isbits.jl")
 elseif BAN_SIZE == 2
-    include("../BAN.jl")
+    include("../BAN_s2_isbits.jl")
 else
     SIZE = BAN_SIZE
     include("../BAN.jl")
