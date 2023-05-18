@@ -5,4 +5,4 @@ gym==0.26.2
 numpy==1.23.2
 matplotlib==3.5.3
 pillow==9.2.0
-
+gymnasium[box2d]
