@@ -14,7 +14,9 @@ import numpy as np
 
 from PIL import Image
 import PIL.ImageDraw as ImageDraw
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
+from io import BytesIO
 
 DEBUG = True
 ELAPSED_THRESHOLD = 1
@@ -51,18 +53,31 @@ class Agent(ABC):
         """
         return self.ban_size
 
-    def _render(self, env, episode, timestep):
+    def _render(self, env, title, timestep, live_rendering : bool=True):
 
         frame = env.render()
         img_frame = Image.fromarray(frame)
 
-        plt.figure(1); plt.clf()
-        plt.title(f'Episode: {episode}')
-        plt.imshow(img_frame)
-        plt.pause(0.01)
+        drawer = ImageDraw.Draw(img_frame)
+        if np.mean(img_frame) < 128:
+            text_color = (255,255,255)
+        else:
+            text_color = (0,0,0)
+        drawer.text((img_frame.size[0]/20,img_frame.size[1]/18), f'{title}', fill=text_color)
 
-    def agent_learning(self, env : Environment, episodes : int, mname : str, learn_at_episode_end : bool = True, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None, render : bool = False):
+
+        if live_rendering:
+            plt.figure(1); plt.clf()
+            plt.title(f'{title}')
+            plt.imshow(img_frame)
+            plt.pause(0.01)
+        return img_frame
+
+    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
         """
+        - if replay_frequency is None or is <= 0, then the learning is done at episode end
+        - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
+        - if dump_period is None no dump is performed, else it is performed every dump_period episodes
         returns rewards, avg_rewards, timings
         """
         # we need to know the size of the reward, 
@@ -78,6 +93,8 @@ class Agent(ABC):
 
         i = 1
 
+        learn_at_episode_end = (replay_frequency is None or replay_frequency <= 0)
+
         while i <= episodes and not solved:
             begin_episode_time = datetime.now()
             state, infos = env.reset()
@@ -91,17 +108,12 @@ class Agent(ABC):
                 next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
                 # render environment animation
                 if render:
-                    self._render(env, i, t)
+                    self._render(env, f"Episode {i}", t, live_rendering=True)
                 done = bool( terminated or truncated )
                 # reward is MO, then it is a list
                 # totrew+=reward
-                before = datetime.now()
                 totrew = [sum(foo) for foo in zip(totrew, reward)]
-                if DEBUG:
-                    elapsed = (datetime.now() - before).total_seconds()
-                    if elapsed > ELAPSED_THRESHOLD:
-                        print(f"sum(foo) for foo in zip(totrew, reward) took {elapsed} seconds")
-
+ 
                 self._add_experience(state,action_index,reward,next_state,done)
                 state=next_state
                 t+=1
@@ -116,7 +128,7 @@ class Agent(ABC):
 
             rewards.append(totrew)
 
-            if i % dump_period == 0:
+            if dump_period is not None and i % dump_period == 0:
                 # TODO: allow to disable the dump and to customize dumping policy
                 self.dump_model_to_file(mname)
 
@@ -135,7 +147,7 @@ class Agent(ABC):
             now = datetime.now()
             elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
-            print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+            if verbose: print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             i+=1
     
         return rewards, avg_rewards, timings
@@ -150,9 +162,9 @@ class Agent(ABC):
 
         pass
 
-    def run_episode(self, env : Environment, render : bool = False):
+    def run_episode(self, env : Environment, render : bool = False, title : str = "", verbose:bool=True) -> tuple[list, int, float, BytesIO]:
         """
-        - return totrew, elapsed_episode
+        - return total_rewards : list, num_timesteps : int, elapsed_episode : float (in seconds), animated_gif_file : BytesIO
         """
         solved = False
 
@@ -161,14 +173,17 @@ class Agent(ABC):
         done = False
         timestep = 0
         totrew = [0] * self._get_reward_dim()
+        img_frames = []
         while not done:
             #start_time = datetime.now()
             action_index = self.act(state)
             action = self.action_space[action_index]
             next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
             # render environment animation
-            if render:
-                self._render(env, "", timestep)
+
+            img_frame = self._render(env, title, timestep, live_rendering=render)
+            img_frames.append(img_frame)
+
             done = bool( terminated or truncated )
 
             totrew = [sum(foo) for foo in zip(totrew, reward)]
@@ -182,9 +197,14 @@ class Agent(ABC):
         elapsed_episode = (end_episode_time - begin_episode_time).total_seconds()
 
         print_time = end_episode_time.strftime("%H:%M:%S")
-        print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
-    
-        return totrew, elapsed_episode
+        if verbose: print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
+
+        animated_gif_file = BytesIO()
+
+        img_frames[0].save(animated_gif_file, format="GIF",
+               save_all=True, append_images=img_frames[1:], delay=0.1,loop=0)# optimize=False,
+        
+        return totrew, timestep, elapsed_episode, animated_gif_file
 
 
 
