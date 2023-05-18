@@ -2,3 +2,7 @@ mo-gymnasium==0.3.4
 gymnasium==0.28.1
 julia==0.6.1
 gym==0.26.2
+numpy==1.23.2
+matplotlib==3.5.3
+pillow==9.2.0
+
