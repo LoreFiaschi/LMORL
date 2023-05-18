@@ -73,7 +73,7 @@ class Agent(ABC):
             plt.pause(0.01)
         return img_frame
 
-    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False):
+    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
         """
         - if replay_frequency is None or is <= 0, then the learning is done at episode end
         - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
@@ -147,7 +147,7 @@ class Agent(ABC):
             now = datetime.now()
             elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
-            print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+            if verbose: print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             i+=1
     
         return rewards, avg_rewards, timings
@@ -162,7 +162,7 @@ class Agent(ABC):
 
         pass
 
-    def run_episode(self, env : Environment, render : bool = False, title : str = "") -> tuple[list, int, float, BytesIO]:
+    def run_episode(self, env : Environment, render : bool = False, title : str = "", verbose:bool=True) -> tuple[list, int, float, BytesIO]:
         """
         - return total_rewards : list, num_timesteps : int, elapsed_episode : float (in seconds), animated_gif_file : BytesIO
         """
@@ -197,7 +197,7 @@ class Agent(ABC):
         elapsed_episode = (end_episode_time - begin_episode_time).total_seconds()
 
         print_time = end_episode_time.strftime("%H:%M:%S")
-        print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
+        if verbose: print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
 
         animated_gif_file = BytesIO()
 
