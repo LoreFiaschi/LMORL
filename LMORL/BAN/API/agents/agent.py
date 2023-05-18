@@ -14,7 +14,9 @@ import numpy as np
 
 from PIL import Image
 import PIL.ImageDraw as ImageDraw
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
+from io import BytesIO
 
 DEBUG = True
 ELAPSED_THRESHOLD = 1
@@ -51,15 +53,25 @@ class Agent(ABC):
         """
         return self.ban_size
 
-    def _render(self, env, episode, timestep):
+    def _render(self, env, title, timestep, live_rendering : bool=True):
 
         frame = env.render()
         img_frame = Image.fromarray(frame)
 
-        plt.figure(1); plt.clf()
-        plt.title(f'Episode: {episode}')
-        plt.imshow(img_frame)
-        plt.pause(0.01)
+        drawer = ImageDraw.Draw(img_frame)
+        if np.mean(img_frame) < 128:
+            text_color = (255,255,255)
+        else:
+            text_color = (0,0,0)
+        drawer.text((img_frame.size[0]/20,img_frame.size[1]/18), f'{title}', fill=text_color)
+
+
+        if live_rendering:
+            plt.figure(1); plt.clf()
+            plt.title(f'{title}')
+            plt.imshow(img_frame)
+            plt.pause(0.01)
+        return img_frame
 
     def agent_learning(self, env : Environment, episodes : int, mname : str, learn_at_episode_end : bool = True, replay_frequency : int = 1, dump_period : int = 50, reward_threshold : float = None, render : bool = False):
         """
