@@ -26,8 +26,11 @@ class DQNHybrid(Agent):
         self.batch_size = batch_size
         self.hidden_size = hidden_size
 
-        self._julia_eval("include(\"../../agents/DQN_Gym_BAN_Hybrid.jl\")")
-        self._julia_eval("include(\"../../custom_BAN_utils.jl\")")
+        self._julia_eval("""
+        (@isdefined DQNAgent) ? nothing : include(\"../../agents/DQN_Gym_BAN_Hybrid.jl\")
+        (@isdefined parse_ban_from_array) ? nothing : include(\"../../custom_BAN_utils.jl\")
+        """
+        )
         # passing parameters to julia env
         self._main.inputsize = self.input_size
         self._main.numactions = self.num_actions
