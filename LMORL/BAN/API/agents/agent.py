@@ -162,9 +162,9 @@ class Agent(ABC):
 
         pass
 
-    def run_episode(self, env : Environment, render : bool = False):
+    def run_episode(self, env : Environment, render : bool = False, title : str = "") -> tuple[list, int, float, BytesIO]:
         """
-        - return totrew, elapsed_episode
+        - return total_rewards : list, num_timesteps : int, elapsed_episode : float (in seconds), animated_gif_file : BytesIO
         """
         solved = False
 
@@ -173,14 +173,17 @@ class Agent(ABC):
         done = False
         timestep = 0
         totrew = [0] * self._get_reward_dim()
+        img_frames = []
         while not done:
             #start_time = datetime.now()
             action_index = self.act(state)
             action = self.action_space[action_index]
             next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
             # render environment animation
-            if render:
-                self._render(env, "", timestep)
+
+            img_frame = self._render(env, title, timestep, live_rendering=render)
+            img_frames.append(img_frame)
+
             done = bool( terminated or truncated )
 
             totrew = [sum(foo) for foo in zip(totrew, reward)]
@@ -195,8 +198,13 @@ class Agent(ABC):
 
         print_time = end_episode_time.strftime("%H:%M:%S")
         print(f"{print_time}\tEpisode\t\ttimesteps:\t{timestep}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t")
-    
-        return totrew, elapsed_episode
+
+        animated_gif_file = BytesIO()
+
+        img_frames[0].save(animated_gif_file, format="GIF",
+               save_all=True, append_images=img_frames[1:], delay=0.1,loop=0)# optimize=False,
+        
+        return totrew, timestep, elapsed_episode, animated_gif_file
 
 
 
