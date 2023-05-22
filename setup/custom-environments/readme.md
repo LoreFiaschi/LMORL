@@ -26,6 +26,13 @@ create a new registration entry:
         max_episode_steps=1000,
         reward_threshold=200,
     )
+
+    register(
+        id="LunarLander-v2-mo",
+        entry_point="gym.envs.box2d.lunar_lander_mo:LunarLander",
+        max_episode_steps=1000,
+        reward_threshold=200,
+    )
     ```
 
 * Eventually you can import your custom environment in Python or Julia using the 'id' of the registration entry:
