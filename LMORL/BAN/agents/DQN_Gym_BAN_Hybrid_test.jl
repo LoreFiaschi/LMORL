@@ -1,4 +1,4 @@
-BAN_SIZE=3
+BAN_SIZE=2
 
 include("DQN_Gym_BAN_Hybrid.jl")
 
@@ -23,7 +23,7 @@ solved=false
 mname="TESTTIMEHYBDQN.bson"
 agent.target_model=deepcopy(agent.model)
 reward_threshold=200
-rewards,avgrewards,timings= hybrid_agent_learning(env, agent, episodes, mname, reward_threshold)
+rewards,avgrewards,timings= hybrid_learning(env, agent, episodes, mname, reward_threshold)
 ################################
 x=convert(Vector{Ban}, range(1,episodes))
 #println(x)

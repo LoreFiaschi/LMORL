@@ -219,7 +219,7 @@ Base.Float64(a::Ban)  =  Float64(BAN.standard_part(a))
 
 
 using BSON
-function hybrid_agent_learning(env, agent, episodes,mname,reward_threshold)
+function hybrid_learning(env, agent, episodes,mname,reward_threshold)
     rewards=Ban[]
     avgrewards=Ban[]
     timings=zeros(0)

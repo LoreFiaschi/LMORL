@@ -73,12 +73,13 @@ class Agent(ABC):
             plt.pause(0.01)
         return img_frame
 
-    def agent_learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
+    def learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
         """
         - if replay_frequency is None or is <= 0, then the learning is done at episode end
         - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
         - if dump_period is None no dump is performed, else it is performed every dump_period episodes
-        returns rewards, avg_rewards, timings
+        returns rewards, avg_rewards, timings, infos
+        - infos is a list of lists of dicts: each element of the parent list is the list of infos of each timestep of an episode
         """
         # we need to know the size of the reward, 
         # that same size will be used for BANs dimension
@@ -86,6 +87,7 @@ class Agent(ABC):
         
         rewards = []
         avg_rewards = []
+        full_infos_list = []
 
         timings = []   #TODO: should this list be empty?
 
@@ -101,6 +103,7 @@ class Agent(ABC):
             done = False
             t = 0
             totrew = [0] * self._get_reward_dim()
+            infos_list = []
             while not done:
                 start_time = datetime.now()
                 action_index = self.act(state)
@@ -121,6 +124,7 @@ class Agent(ABC):
                     self._experience_replay()
                 tmng = ( datetime.now() - start_time ).total_seconds()
                 timings.append(tmng)
+                infos_list.append(infos)
 
             if learn_at_episode_end:
                 self._experience_replay()
@@ -144,13 +148,14 @@ class Agent(ABC):
                 avg_reward = [sum(comp)/i for comp in zip(*rewards)]
 
             avg_rewards.append(avg_reward)
+            full_infos_list.append(infos_list)
             now = datetime.now()
             elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
             if verbose: print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             i+=1
     
-        return rewards, avg_rewards, timings
+        return rewards, avg_rewards, timings, full_infos_list
 
     @abstractmethod
     def act(self, state):
