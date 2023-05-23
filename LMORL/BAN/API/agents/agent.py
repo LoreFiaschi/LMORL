@@ -73,7 +73,7 @@ class Agent(ABC):
             plt.pause(0.01)
         return img_frame
 
-    def learning(self, env : Environment, episodes : int, mname : str, replay_frequency : int|None = None, dump_period : int|None = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
+    def learning(self, env : Environment, episodes : int, mname : str, replay_frequency = None, dump_period = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
         """
         - if replay_frequency is None or is <= 0, then the learning is done at episode end
         - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
@@ -185,7 +185,7 @@ class Agent(ABC):
 
         pass
 
-    def run_episode(self, env : Environment, render : bool = False, title : str = "", verbose:bool=True) -> tuple[list, int, float, BytesIO]:
+    def run_episode(self, env : Environment, render : bool = False, title : str = "", verbose:bool=True): #-> tuple[list, int, float, BytesIO]:
         """
         - return total_rewards : list, num_timesteps : int, elapsed_episode : float (in seconds), animated_gif_file : BytesIO
         """
