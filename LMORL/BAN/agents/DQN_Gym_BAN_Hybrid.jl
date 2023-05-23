@@ -83,6 +83,8 @@ end
     output_layer=Dense(hidden_size,numactions;init=Ban_glorot_uniform(rng))
     model=f64(Chain(input_layer,Dense(hidden_size,hidden_size,relu;init=Flux.glorot_uniform(rng)),output_layer))
     target_model=Chain(Dense(input_size,hidden_size,relu),Dense(hidden_size,hidden_size,relu),Dense(hidden_size,numactions))
+    use_clipping::Bool=false
+    clipping_tol::Real=1.0
     batch_size::Int64=64;
     
 end
@@ -182,6 +184,37 @@ end
 
 Flux.@adjoint abs2(x::Ban) = abs2(x), Δ -> (Ban(Δ)*(x + x),)
 
+@inline function clipvalue_check(a::Float64, tol::Real)
+	return (abs(a) >= tol) ? (a>0 ? Float64(tol) : -Float64(tol)) : a
+end
+
+function clipvalue(a::Ban, tol::Real)
+    if BAN_SIZE == 3
+	    num = (a.num1, clipvalue_check(a.num2, tol), clipvalue_check(a.num3, tol))
+    elseif BAN_SIZE == 2
+        num = (a.num1, clipvalue_check(a.num2, tol))
+    else
+        num = []
+        num[1] = a.num[1]
+        for index in 2:lenght(a.num)
+            num[index] = clipvalue_check(a.num[index], tol)
+        end
+        #num = clipvalue_check.(a.num, tol)
+        #num[1] = a.num[1]
+    end
+	p, num = BAN.to_normal_form(a.p, num)
+	return Ban(p, num, false)
+end
+
+function clipvalue(A::AbstractArray{Ban}, tol::Real)
+	B = similar(A)
+	
+	for i in eachindex(B)
+		B[i] = clipvalue(A[i], tol);
+	end
+	
+	return B
+end
 
 function experience_replay!(agent::DQNAgent)
     if length(agent.memory) < agent.train_start
@@ -210,6 +243,16 @@ function experience_replay!(agent::DQNAgent)
     for d in data
         gs = gradient(ps) do
             loss(d...)
+        end
+        if agent.use_clipping
+            a=0
+            for i=1:length(ps)
+                a+=length(gs[ps[i]])
+            end
+            f=Vector{Ban}(undef, a)
+            copy!(f,gs)
+            f=clipvalue(f,agent.clipping_tol)
+            copy!(gs,f)
         end
         Flux.Optimise.update!(opt, ps, gs)
     end
