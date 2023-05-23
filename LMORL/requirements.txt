@@ -6,3 +6,4 @@ numpy==1.23.2
 matplotlib==3.5.3
 pillow==9.2.0
 gymnasium[box2d]
+torch==2.0.1
