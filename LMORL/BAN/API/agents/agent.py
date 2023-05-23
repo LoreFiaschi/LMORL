@@ -79,7 +79,7 @@ class Agent(ABC):
         - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
         - if dump_period is None no dump is performed, else it is performed every dump_period episodes
         returns rewards, avg_rewards, timings, infos
-        - infos is a list of lists of dicts: each element of the parent list is the list of infos of each timestep of an episode
+        - full_infos_dict is a dict of lists of lists: each element of the dictionary is a key of the env infos, and each of its lists is the list of infos of each timestep of an episode
         """
         # we need to know the size of the reward, 
         # that same size will be used for BANs dimension
@@ -87,23 +87,25 @@ class Agent(ABC):
         
         rewards = []
         avg_rewards = []
-        full_infos_list = []
+        full_infos_dict = {}
 
-        timings = []   #TODO: should this list be empty?
+        timings = []
 
         solved = False
+        threshold_exceeded = 0
+        THRESHOLD_EXCEEDED_CONSECUTIVELY = 3
 
-        i = 1
+        episode_number = 1
 
         learn_at_episode_end = (replay_frequency is None or replay_frequency <= 0)
 
-        while i <= episodes and not solved:
+        while episode_number <= episodes and not solved:
             begin_episode_time = datetime.now()
             state, infos = env.reset()
             done = False
             t = 0
             totrew = [0] * self._get_reward_dim()
-            infos_list = []
+            infos_dict = {}
             while not done:
                 start_time = datetime.now()
                 action_index = self.act(state)
@@ -111,7 +113,7 @@ class Agent(ABC):
                 next_state,reward,terminated, truncated, infos=self._ban_step(env, action)
                 # render environment animation
                 if render:
-                    self._render(env, f"Episode {i}", t, live_rendering=True)
+                    self._render(env, f"Episode {episode_number}", t, live_rendering=True)
                 done = bool( terminated or truncated )
                 # reward is MO, then it is a list
                 # totrew+=reward
@@ -124,7 +126,12 @@ class Agent(ABC):
                     self._experience_replay()
                 tmng = ( datetime.now() - start_time ).total_seconds()
                 timings.append(tmng)
-                infos_list.append(infos)
+                
+                if type(infos) == dict:
+                    for key in infos.keys():
+                        if key not in infos_dict.keys():
+                            infos_dict[key] = []
+                        infos_dict[key].append(infos[key])
 
             if learn_at_episode_end:
                 self._experience_replay()
@@ -132,30 +139,41 @@ class Agent(ABC):
 
             rewards.append(totrew)
 
-            if dump_period is not None and i % dump_period == 0:
-                # TODO: allow to disable the dump and to customize dumping policy
+            if dump_period is not None and episode_number % dump_period == 0:
                 self.dump_model_to_file(mname)
 
-            if i >= 100:
+            if episode_number >= 100:
                 # https://www.geeksforgeeks.org/python-ways-to-sum-list-of-lists-and-return-sum-list/
-                avg_reward = [sum(comp[i - 100 : i ])/100 for comp in zip(*rewards)]
+                avg_reward = [sum(comp[episode_number - 100 : episode_number ])/100 for comp in zip(*rewards)]
                 #( sum(rewards[i - 100: i - 1]) ) / 100  --> not sium because reward is a NA vector
 
-                # TODO: consider if adding an exit condition that use as threshold the
-                # input parameter reward_threshold
-
             else:
-                avg_reward = [sum(comp)/i for comp in zip(*rewards)]
+                avg_reward = [sum(comp)/episode_number for comp in zip(*rewards)]
 
             avg_rewards.append(avg_reward)
-            full_infos_list.append(infos_list)
+            
+            for key in infos_dict.keys():
+                if key not in full_infos_dict.keys():
+                    full_infos_dict[key] = []
+                full_infos_dict[key].append(infos_dict[key])
+
             now = datetime.now()
             elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
-            if verbose: print(f"{print_time}\tEpisode\t{i}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
-            i+=1
+            if verbose: print(f"{print_time}\tEpisode\t{episode_number}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+            
+            if reward_threshold is not None and reward[0] >= reward_threshold:
+                # use as reward threshold the first component of the reward vector
+                threshold_exceeded += 1
+                if threshold_exceeded >= THRESHOLD_EXCEEDED_CONSECUTIVELY:
+                    if verbose: print(f"Terminating at episode {episode_number} since the reward's first component exceeded for {threshold_exceeded} consecutive times the reward threshold {reward_threshold}")
+                    solved = True
+            else:
+                threshold_exceeded = 0
+            
+            episode_number+=1
     
-        return rewards, avg_rewards, timings, full_infos_list
+        return rewards, avg_rewards, timings, full_infos_dict
 
     @abstractmethod
     def act(self, state):
@@ -171,7 +189,6 @@ class Agent(ABC):
         """
         - return total_rewards : list, num_timesteps : int, elapsed_episode : float (in seconds), animated_gif_file : BytesIO
         """
-        solved = False
 
         begin_episode_time = datetime.now()
         state, infos = env.reset()
