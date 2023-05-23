@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt 
+import string
 
 class Ban:
     p = None
@@ -45,7 +46,7 @@ class Ban:
 
     
     def print(self):
-        trans = get_mapping()
+        trans = Ban.get_mapping()
         
         char = "α"
 
@@ -58,7 +59,6 @@ class Ban:
         print()
 
     def get_mapping():
-        import string
 
         superscript_map = {
             "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶",
@@ -86,9 +86,11 @@ class Ban:
             fig.suptitle(title)
 
             for i in range(how_many_components):
-                ax_list[i].set(ylabel='α^'+str(-i).translate(get_mapping()))
+                ax_list[i].set(ylabel='α'+str(-i).translate(Ban.get_mapping()))
                 ax_list[i].plot(range(episodes), tmp[i])
+            
 
+            plt.xlabel("Episodes")
             plt.show()
             return fig
     
