@@ -18,7 +18,8 @@ class DQNHybrid(Agent):
                  batch_size : int, 
                  hidden_size : int,
                  ban_size : int,
-                  max_memory_size: int = 100, train_start: int = 100) -> None:
+                  max_memory_size: int = 100, train_start: int = 100, 
+                  use_clipping : bool = False, clipping_tol : float = 1.0) -> None:
         super().__init__(input_size, num_actions, action_space, ban_size, max_memory_size, train_start)
 
         self.learning_rate = learning_rate
@@ -43,10 +44,12 @@ class DQNHybrid(Agent):
         self._main.batch_size = self.batch_size
         self._main.train_start = self.train_start
         self._main.hidden_size = self.hidden_size
+        self._main.use_clipping = use_clipping
+        self._main.clipping_tol = abs( clipping_tol )
         #
         self._julia_eval("""agent=DQNAgent(input_size=inputsize,
                     numactions=numactions,actionspace=actions,max_memory=max_memory,learning_rate= learning_rate,epsilon_decay=epsilon_decay,
-                    epsilon_min=epsilon_min, batch_size=batch_size,train_start=train_start,hidden_size=hidden_size)""")
+                    epsilon_min=epsilon_min, batch_size=batch_size,train_start=train_start,hidden_size=hidden_size, use_clipping=use_clipping, clipping_tol=clipping_tol)""")
         
 
     def _episode_end(self):

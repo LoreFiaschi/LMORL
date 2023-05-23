@@ -23,8 +23,10 @@ export component_wise_division, retrieve_infinitesimals
 
 abstract type AbstractAlgNum <: Number end
 
+using Main: BAN_SIZE
+# https://stackoverflow.com/questions/37823591/how-do-you-check-if-a-variable-is-defined-inside-a-module-in-julia
 # Ban dimension
-const SIZE = (@isdefined BAN_SIZE) ? BAN_SIZE : 2;
+const SIZE = (@isdefined (BAN_SIZE)) ? (BAN_SIZE) : 2;
 
 # Ban declaration
 mutable struct Ban <: AbstractAlgNum

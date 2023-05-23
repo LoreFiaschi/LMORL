@@ -18,7 +18,7 @@ episodes=10
 actions=[0,1,2,3]
 reward_threshold=200
 replay_frequency=1
-agent=DQNAgent(input_size=inputsize,numactions=4,actionspace=actions,max_memory=100000,learning_rate= 0.0001,epsilon_decay = 0.995,epsilon_min=0.1, batch_size=64,train_start=64,hidden_size=128)
+agent=DQNAgent(input_size=inputsize,numactions=4,actionspace=actions,max_memory=100000,learning_rate= 0.0001,epsilon_decay = 0.995,epsilon_min=0.1, batch_size=64,train_start=64,hidden_size=128, use_clipping=true, clipping_tol=2.0)
 solved=false
 mname="TESTTIMEHYBDQN.bson"
 agent.target_model=deepcopy(agent.model)
