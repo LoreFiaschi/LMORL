@@ -1,4 +1,4 @@
-BAN_SIZE=2
+BAN_SIZE=3
 
 include("DQN_Gym_BAN_Hybrid.jl")
 
@@ -10,11 +10,11 @@ using BSON
 using Zygote
 Random.seed!(777)
 Random.seed!(rng,777)
-env = GymEnv("LunarLander-v2-mo-custom")
+env = GymEnv("LunarLander-v2-mo")
 st, foo = reset!(env)
 inputsize=length(st)
 #print(inputsize)
-episodes=200
+episodes=10
 actions=[0,1,2,3]
 reward_threshold=200
 replay_frequency=1
@@ -26,8 +26,8 @@ reward_threshold=200
 rewards,avgrewards,timings= hybrid_learning(env, agent, episodes, mname, reward_threshold)
 ################################
 x=convert(Vector{Ban}, range(1,episodes))
-#println(x)
-#println(rewards)
+println(x)
+println(rewards)
 plot(x,rewards,rlplot=true, figtitle="Foo")
 ###
 x=convert(Vector{Ban}, range(1,episodes))

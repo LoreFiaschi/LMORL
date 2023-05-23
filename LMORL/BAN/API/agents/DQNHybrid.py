@@ -4,6 +4,7 @@ from julia.api import Julia
 from julia import Main
 
 from datetime import datetime
+import os
 
 DEBUG = False
 ELAPSED_THRESHOLD = 1
@@ -142,5 +143,40 @@ class DQNHybrid(Agent):
             elapsed = (datetime.now() - before).total_seconds()
             if elapsed > ELAPSED_THRESHOLD:
                 print(f"experience_replay! took {elapsed} seconds")
+
+    def dump_model_to_file(self, model_filename : str, models_path : str = None):
+        '''
+        Dump model to BSON file
+        - model_filename can include .bson file extension 
+        - models_path is the absolute path where model is going to be saved
+        '''
+
+        complete_saving_path = os.path.join(models_path, model_filename)
+
+        save_cmd = f"""
+            weights=Flux.params(agent.model)
+            BSON.@save "{complete_saving_path}" weights
+        """
+
+        self._julia_eval(save_cmd)
+
+    def load_model_from_file(self, model_filepath : str):
+        '''
+        Load model from BSON file
+        - model_filepath is the absolute path from which model is going to be loaded
+        '''
+
+        load_cmd = f"""
+            @load "{model_filepath}" weights
+            Flux.loadparams!(agent.model,weights)
+        """
+
+        self._julia_eval(load_cmd)
+        
+
+        
+
+
+
         
         
