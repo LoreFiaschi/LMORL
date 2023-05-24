@@ -47,7 +47,7 @@ function banStep(env, action)
     return state,reward,done,information
 end
 
-StateType=Union{Array{Float32,1},Array{Int32,1}}
+StateType=Union{Array{Float32},Array{Int32}, Array{UInt8}}
 
 
 @with_kw mutable struct Replay
