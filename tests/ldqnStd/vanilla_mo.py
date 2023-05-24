@@ -1,4 +1,4 @@
-import gymnasium as gym
+import gym #gymnasium as gym
 import random, math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -50,7 +50,7 @@ class Lex_DDQNAgent:
 		self.action_space = action_space
 		self.action_size = action_space.n
 		self.reward_size = reward_size
-		self.out_size = (reward_size, action_size)
+		self.out_size = (reward_size, self.action_size)
 		self.slack = slack
 		self.device = device
 		self.criterion = nn.SmoothL1Loss()
@@ -186,11 +186,11 @@ if __name__ == '__main__':
 
 	device = torch.device("cpu")
 
-	env = gym.make('LunarLander-v2')
+	env = gym.make('LunarLander-v2-mo')
 	env.reset(seed = 0)
 	state_size = env.observation_space.shape[0]
 	action_size = env.action_space.n
-	reward_size = 2
+	reward_size = 3
 	landings = []
 	landings_in_pad = []
 	score = []
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
 		state, _ = env.reset()
 		state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
-		episode_score = 0
+		episode_score = [0] * reward_size#env.reward_range.
 		episode_vector_score = torch.zeros(reward_size, device=device)
 
 		while not done:
@@ -228,11 +228,9 @@ if __name__ == '__main__':
 			# instructions for consistency
 			done = terminated or truncated
 			next_state = None if terminated else torch.tensor(next_state, dtype=torch.float32, device=device).unsqueeze(0)
-			info["fuel_consumption"] = 1
-			info["landed"] = False
-			info["in_pad"] = True
-			episode_score += reward_sc
-			reward = torch.tensor([reward_sc + info["fuel_consumption"], -info["fuel_consumption"]], device=device)
+
+			totrew = [sum(foo) for foo in zip(episode_score, reward_sc)]
+			reward = torch.tensor(reward_sc, device=device)
 			episode_vector_score += reward
 
 			# add <s,a,r,s'> to ERB
@@ -250,8 +248,8 @@ if __name__ == '__main__':
 
 			if done:				
 				agent.update_epsilon()
-				landings.append(int(info["landed"]))
-				landings_in_pad.append(int(info["landed"] and info["in_pad"]))
+				#landings.append(int(info["landed"]))
+				#landings_in_pad.append(int(info["landed"] and info["in_pad"]))
 				score.append(episode_score)
 				vector_score.append(episode_vector_score)
 				epsilon_record.append(agent.get_epsilon())
