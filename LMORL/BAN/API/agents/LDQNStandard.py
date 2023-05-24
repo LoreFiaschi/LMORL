@@ -115,8 +115,10 @@ class LDQNStandard(Agent):
     def _add_experience(self, state, action, reward, next_state, done: bool):
         state = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
         next_state = None if done else torch.tensor(next_state, dtype=torch.float32, device=self.device).unsqueeze(0)
-        reward = torch.tensor(reward, device=self.device)
-            
+        reward = torch.tensor(reward[:self.reward_size], device=self.device)
+        # NOTE: in order to obtain the right shape for the reward tensor, 
+        # we have to keep only the first reward_size components of the reward vector
+    
         self.__add_experience(state, action, reward, next_state)
 
 	# save sample <s, a, r, s'>. into replay memory
@@ -132,10 +134,13 @@ class LDQNStandard(Agent):
 
         for i in range(len(non_final_next_states)):
             actions[i] = self.__arglexmax(q_values[i,:])
+        actions = torch.vstack([actions] * self.reward_size).T.unsqueeze(-1)
+        # NOTE: in order to obtain the right shape for the actions tensor, 
+        # we have vstack self.reward_size times the original actions
 
-        actions = torch.vstack((actions, actions)).T.unsqueeze(-1)
         # evaluate a' according wih target network
-        return self.target_model(non_final_next_states).gather(2,actions).squeeze()
+
+        return self.target_model(non_final_next_states).gather(2, actions).squeeze()
 
     def _update_target_model(self):
          self.__update_target_model()
@@ -155,8 +160,6 @@ class LDQNStandard(Agent):
         # if there are not enough samples: do nothing
         if len(self.memory) < self.train_start:
             return
-        
-        FOO = 2     # self._get_reward_dim()
 
         batch = random.sample(self.memory, self.batch_size)
         batch = Transition(*zip(*batch))
@@ -165,12 +168,15 @@ class LDQNStandard(Agent):
         non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
 
         state_batch = torch.cat(batch.state)
-        action_batch = torch.tensor([batch.action, batch.action]).T.unsqueeze(-1)
+        action_batch = torch.tensor([batch.action] * self.reward_size).T.unsqueeze(-1)
+        # NOTE: in order to obtain the right shape for the actions tensor, 
+        # we have vstack self.reward_size times the original actions
+
         reward_batch = torch.stack(batch.reward)
 
-        state_action_values = self.model(state_batch).gather(FOO, action_batch).squeeze()
+        state_action_values = self.model(state_batch).gather(2, action_batch).squeeze()
         next_state_values = torch.zeros((self.batch_size, self.reward_size), device=self.device)
-
+        
         with torch.no_grad():
             next_state_values[non_final_mask] = self.__get_q_value(non_final_next_states)
 
