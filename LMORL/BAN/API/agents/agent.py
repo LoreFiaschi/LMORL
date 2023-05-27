@@ -276,10 +276,8 @@ class Agent(ABC):
         pass
 
     def dump_model_to_file(self, model_filename : str):
-        # TODO: implement this method (understand if it is agent-dependent)
         pass
 
     def load_model_from_file(self, model_filepath : str):
-        # TODO: implement this method (understand if it is agent-dependent)
         # refer to: "https://github.com/LoreFiaschi/DeepLearning/test/DQN_LL_BAN - Test.ipynb"
         pass

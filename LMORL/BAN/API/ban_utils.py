@@ -71,9 +71,12 @@ class Ban:
         return trans  
 
 
-    def display_plot(rewards:list, episodes:int, title:str = ""):
+    def display_plot(rewards:list, num_episodes:int, title:str = ""):
             """
             plot the behaviour of the reawards during episodes
+            - rewards must be a list of lists, where each element of the parent list is a MO reward and each element 
+            of the child list is a component of a reward (considered float)
+            - each MO reward is assumed to have the same number of components
             #- call plt.show() to show the generated figure
             - call %matplotlib inline to display inline plot in .ipynb file
             """
@@ -87,7 +90,7 @@ class Ban:
 
             for i in range(how_many_components):
                 ax_list[i].set(ylabel='α'+str(-i).translate(Ban.get_mapping()))
-                ax_list[i].plot(range(episodes), tmp[i])
+                ax_list[i].plot(range(num_episodes), tmp[i])
             
 
             plt.xlabel("Episodes")
