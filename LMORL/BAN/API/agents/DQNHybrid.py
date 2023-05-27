@@ -24,6 +24,7 @@ class DQNHybrid(Agent):
         super().__init__(input_size, num_actions, action_space, ban_size, max_memory_size, train_start)
 
         self.learning_rate = learning_rate
+        self.epsilon = 1
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
         self.batch_size = batch_size
@@ -179,8 +180,34 @@ class DQNHybrid(Agent):
 
         self._julia_eval(load_cmd)
         
+    def get_epsilon_values_list(self, num_episodes : int):
+        """
+        returns the list of values assumed by epsilon for the current agent for the specified number of episodes
+        - assuming to start from the first episode
+        """
+        epsilon = self.epsilon
+        epsilon_decay = self.epsilon_decay
+        epsilon_min = self.epsilon_min
+        epsilon_values = []
+        for i in range(num_episodes):
+            epsilon_values.append(epsilon)
+            if epsilon > epsilon_min:
+                epsilon = epsilon * epsilon_decay
+        return epsilon_values
 
+    def plot_epsilon_values(self, num_episodes : int):
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+
+        fig.suptitle(f"Epsilon values for {num_episodes} episodes")
+
+        ax.set(ylabel="epsilon")
+        ax.plot(range(num_episodes), self.get_epsilon_values_list(num_episodes))
         
+
+        plt.xlabel("Episodes")
+        plt.show()
+        return fig
 
 
 
