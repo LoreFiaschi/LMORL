@@ -18,6 +18,7 @@ class DQNHybrid(Agent):
                  batch_size : int, 
                  hidden_size : int,
                  ban_size : int,
+                 discount_factor : float = 0.99,
                   max_memory_size: int = 100, train_start: int = 100, 
                   use_clipping : bool = False, clipping_tol : float = 1.0, 
                   use_legacy : bool = False) -> None:
@@ -25,11 +26,13 @@ class DQNHybrid(Agent):
         super().__init__(input_size, num_actions, action_space, ban_size, max_memory_size, train_start)
 
         self.learning_rate = learning_rate
+        self.epsilon = 1
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
         self.batch_size = batch_size
         self.hidden_size = hidden_size
         self.use_legacy = use_legacy
+        self.gamma = discount_factor
 
         self._julia_eval("""
         (@isdefined DQNAgent) ? nothing : include(\"../../agents/DQN_Gym_BAN_Hybrid.jl\")
@@ -47,12 +50,13 @@ class DQNHybrid(Agent):
         self._main.batch_size = self.batch_size
         self._main.train_start = self.train_start
         self._main.hidden_size = self.hidden_size
+        self._main.gamma = self.gamma
         self._main.use_clipping = use_clipping
         self._main.clipping_tol = abs( clipping_tol )
         #
         self._julia_eval("""agent=DQNAgent(input_size=inputsize,
                     numactions=numactions,actionspace=actions,max_memory=max_memory,learning_rate= learning_rate,epsilon_decay=epsilon_decay,
-                    epsilon_min=epsilon_min, batch_size=batch_size,train_start=train_start,hidden_size=hidden_size, use_clipping=use_clipping, clipping_tol=clipping_tol)""")
+                    epsilon_min=epsilon_min, batch_size=batch_size,train_start=train_start,hidden_size=hidden_size, use_clipping=use_clipping, clipping_tol=clipping_tol, gamma=gamma)""")
         
 
     def _episode_end(self):
@@ -183,8 +187,34 @@ class DQNHybrid(Agent):
 
         self._julia_eval(load_cmd)
         
+    def get_epsilon_values_list(self, num_episodes : int):
+        """
+        returns the list of values assumed by epsilon for the current agent for the specified number of episodes
+        - assuming to start from the first episode
+        """
+        epsilon = self.epsilon
+        epsilon_decay = self.epsilon_decay
+        epsilon_min = self.epsilon_min
+        epsilon_values = []
+        for i in range(num_episodes):
+            epsilon_values.append(epsilon)
+            if epsilon > epsilon_min:
+                epsilon = epsilon * epsilon_decay
+        return epsilon_values
 
+    def plot_epsilon_values(self, num_episodes : int):
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+
+        fig.suptitle(f"Epsilon values for {num_episodes} episodes")
+
+        ax.set(ylabel="epsilon")
+        ax.plot(range(num_episodes), self.get_epsilon_values_list(num_episodes))
         
+
+        plt.xlabel("Episodes")
+        plt.show()
+        return fig
 
 
 
