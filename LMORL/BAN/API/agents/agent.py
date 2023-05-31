@@ -37,10 +37,6 @@ class Agent(ABC):
         self._jl = Julia(compiled_modules=True)
         self._main = Main
 
-        path = pathlib.Path(__file__).parent.resolve()
-        path = str(path).replace("\\", "\\\\")
-        self._julia_eval(f"cd(\"{path}\")")
-
         # DONE: decide if the right version of BAN library has to be included here
         # the include is performed inside jl file of the agent
         self._main.BAN_SIZE = self.ban_size

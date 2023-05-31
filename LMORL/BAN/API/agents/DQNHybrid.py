@@ -5,6 +5,7 @@ from julia import Main
 
 from datetime import datetime
 import os
+import pathlib
 
 DEBUG = False
 ELAPSED_THRESHOLD = 1
@@ -34,11 +35,21 @@ class DQNHybrid(Agent):
         self.use_legacy = use_legacy
         self.gamma = discount_factor
 
+        cur_path = os.getcwd()
+
+        path = pathlib.Path(__file__).parent.resolve()
+        path = str(path).replace("\\", "\\\\")
+        self._julia_eval(f"cd(\"{path}\")")
+
         self._julia_eval("""
         (@isdefined DQNAgent) ? nothing : include(\"../../agents/DQN_Gym_BAN_Hybrid.jl\")
         (@isdefined parse_ban_from_array) ? nothing : include(\"../../custom_BAN_utils.jl\")
         """
         )
+
+        os.chdir(cur_path)
+
+
         # passing parameters to julia env
         self._main.inputsize = self.input_size
         self._main.numactions = self.num_actions
