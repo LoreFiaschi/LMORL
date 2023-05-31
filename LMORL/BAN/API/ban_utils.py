@@ -71,7 +71,7 @@ class Ban:
         return trans  
 
 
-    def display_plot(rewards:list, num_episodes:int, title:str = ""):
+    def display_plot(rewards:list, num_episodes:int, title:str = "", call_plot:bool = True):
             """
             plot the behaviour of the reawards during episodes
             - rewards must be a list of lists, where each element of the parent list is a MO reward and each element 
@@ -94,7 +94,8 @@ class Ban:
             
 
             plt.xlabel("Episodes")
-            plt.show()
+            if call_plot:
+                plt.show()
             return fig
     
     def averaged_sequence(sequence : list, window_size : int = 100) -> list:
