@@ -9,6 +9,7 @@ from julia import Main
 
 from datetime import datetime
 from abc import ABC, abstractmethod
+from typing import Callable
 import pathlib
 import numpy as np
 
@@ -73,12 +74,14 @@ class Agent(ABC):
             plt.pause(0.01)
         return img_frame
 
-    def learning(self, env : Environment, episodes : int, mname : str, replay_frequency = None, dump_period = None, reward_threshold : float = None, render : bool = False, verbose:bool=True):
+    def learning(self, env : Environment, episodes : int, mname : str, replay_frequency = None, dump_period = None, early_stopping : Callable[[list], bool] = None, render : bool = False, verbose:bool=True):
         """
         - if replay_frequency is None or is <= 0, then the learning is done at episode end
         - if replay_frequency is > 0, the learning is performed every replay_frequency timesteps
         - if dump_period is None no dump is performed, else it is performed every dump_period episodes
         returns rewards, avg_rewards, timings, infos
+        - early_stopping must be either None or a callable that returns True if the current average MO reward satisfies some type of requirement (environment dependent)
+        - if early_stopping returns True a defined number of consecutive times, the learning is stopped
         - full_infos_dict is a dict of lists of lists: each element of the dictionary is a key of the env infos, and each of its lists is the list of infos of each timestep of an episode
         """
         # we need to know the size of the reward, 
@@ -162,11 +165,12 @@ class Agent(ABC):
             print_time = now.strftime("%H:%M:%S")
             if verbose: print(f"{print_time}\tEpisode\t{episode_number}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
             
-            if reward_threshold is not None and reward[0] >= reward_threshold:
+            #if reward_threshold is not None and reward[0] >= reward_threshold:
+            if callable(early_stopping) and early_stopping(avg_reward) == True:
                 # use as reward threshold the first component of the reward vector
                 threshold_exceeded += 1
                 if threshold_exceeded >= THRESHOLD_EXCEEDED_CONSECUTIVELY:
-                    if verbose: print(f"Terminating at episode {episode_number} since the reward's first component exceeded for {threshold_exceeded} consecutive times the reward threshold {reward_threshold}")
+                    if verbose: print(f"Terminating at episode {episode_number} since the function early_stopping returned True for {THRESHOLD_EXCEEDED_CONSECUTIVELY} consecutive times")
                     solved = True
             else:
                 threshold_exceeded = 0
