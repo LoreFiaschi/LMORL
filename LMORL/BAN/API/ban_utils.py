@@ -97,3 +97,23 @@ class Ban:
             plt.show()
             return fig
     
+    def averaged_sequence(sequence : list, window_size : int = 100) -> list:
+        """
+        - given in input a sequence of vectors, returns the average-smoothed sequence.
+        - all the vectors must have the same number of components
+        - window_size: the number of vectors to consider for calculating the average
+        """
+        ret = []
+        sequence_len = len(sequence)
+        tmp=list(zip(*sequence))
+        how_many_components = len(tmp)
+
+        for i in range(sequence_len):
+            cur_size = min((window_size, i + 1))
+            offset = cur_size 
+            tmp_app = []
+            for j in range(how_many_components):
+                tmp_app.append( sum( tmp[j][i - offset + 1 : i + 1] ) / cur_size )
+
+            ret.append(tmp_app)
+        return ret
