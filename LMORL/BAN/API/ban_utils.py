@@ -117,3 +117,26 @@ class Ban:
 
             ret.append(tmp_app)
         return ret
+
+    def display_execution_time(new_timings:list, legacy_timings:list, title:str = ""):
+
+        #remove the maximum execution time as it is widely larger than others because of Julia object allocation
+        for i in range(1):  
+            new_timings.remove(max(new_timings))
+
+        xpoints = range(len(legacy_timings)) if (len(new_timings) > len(legacy_timings)) else range(len(new_timings))
+        
+        ypoints_new = new_timings[:len(xpoints)]
+        ypoints_legacy = legacy_timings[:len(xpoints)]
+        
+        fig = plt.plot(xpoints, ypoints_new)
+        plt.plot(xpoints, ypoints_legacy)
+        
+        plt.title(title)
+        plt.xlabel("Timesteps")
+        plt.ylabel("Execution Time")
+        plt.legend(['Main Object', 'jl_eval'])
+
+        plt.show()
+        return fig
+    
