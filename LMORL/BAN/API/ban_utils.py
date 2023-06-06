@@ -94,6 +94,8 @@ class Ban:
 
         Main.call_plot_from_python(num_episodes, rewards, rlplot, title, call_plot)
 
+
+
     def display_plot(rewards:list, num_episodes:int, title:str = "", call_plot:bool = True, use_BanPlots : bool = False):
             """
             plot the behaviour of the reawards during episodes
@@ -105,8 +107,12 @@ class Ban:
             """
 
             if use_BanPlots:
+                if call_plot == False:
+                    print(f"setting call_plot to True since cannot return Figure object from Julia")
+                    call_plot = True
                 Ban.__display_plot_jl(rewards, num_episodes, title, call_plot)
                 return
+                
             
             tmp=list(zip(*rewards))
             how_many_components = len(tmp)

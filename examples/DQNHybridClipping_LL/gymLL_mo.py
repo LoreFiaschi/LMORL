@@ -15,7 +15,7 @@ from LMORL.BAN.API.agents.DQNHybrid import DQNHybrid
 
 import gym
 
-env = gym.make("LunarLander-v2-mo", render_mode="rgb_array")
+env = gym.make("LunarLander-v2-mo", render_mode="rgb_array", max_episode_steps=500)
 
 
 input_size = env.observation_space.shape[0]
@@ -67,8 +67,14 @@ total_reward, num_timestep, elapsed_episode, animated_gif_file = agent.run_episo
 with open("gymLL_mo_results/after_training.gif", "wb+") as f:
     f.write(animated_gif_file.getbuffer())
 
-r = Ban.display_plot(rewards, len(rewards), "Total rewards", call_plot=False)
-r.savefig("gymLL_mo_results/total_rewards_plot.png")
+r = Ban.display_plot(rewards, len(rewards), "Total rewards", call_plot=False, use_BanPlots=False)
+r.savefig("gymLL_mo_results/total_rewards_plot__BANPlots.png")
 
-r = Ban.display_plot(avg_rewards, len(avg_rewards), "Total AVG rewards", call_plot=False)
+r = Ban.display_plot(rewards, len(rewards), "Total rewards", call_plot=True, use_BanPlots=True)
+#r.savefig("gymLL_mo_results/total_rewards_plot__BANPlots.png")
+
+r = Ban.display_plot(avg_rewards, len(avg_rewards), "Total AVG rewards", call_plot=False, use_BanPlots=False)
 r.savefig("gymLL_mo_results/avg_rewards_plot.png")
+
+r = Ban.display_plot(avg_rewards, len(avg_rewards), "Total AVG rewards", call_plot=True, use_BanPlots=True)
+#r.savefig("gymLL_mo_results/avg_rewards_plot__BANPlots.png")
