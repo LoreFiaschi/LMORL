@@ -15,7 +15,9 @@ from LMORL.BAN.API.agents.DQNHybrid import DQNHybrid
 
 import gym
 
-env = gym.make("LunarLander-v2-mo", render_mode="rgb_array", max_episode_steps=500)
+MAX_TIMESTEPS = 1000
+
+env = gym.make("LunarLander-v2-mo", render_mode="rgb_array", max_episode_steps=MAX_TIMESTEPS)
 
 
 input_size = env.observation_space.shape[0]
@@ -28,7 +30,7 @@ batch_size = 64
 hidden_size = 128
 BAN_SIZE = 3
 max_memory_size=100000
-train_start = max_memory_size
+train_start = 1000
 use_clipping = True
 clipping_tol = 1.0
 
@@ -36,7 +38,7 @@ agent = DQNHybrid(input_size=input_size, num_actions=num_actions,
                   action_space=action_space, learning_rate=learning_rate,
                   epsilon_decay=epsilon_decay, epsilon_min=epsilon_min,
                   batch_size=batch_size, hidden_size=hidden_size,
-                  ban_size=3, max_memory_size=max_memory_size, train_start=1000, use_clipping=use_clipping, clipping_tol=clipping_tol)
+                  ban_size=3, max_memory_size=max_memory_size, train_start=train_start, use_clipping=use_clipping, clipping_tol=clipping_tol)
 
 
 total_reward, num_timestep, elapsed_episode, animated_gif_file = agent.run_episode(env, title="First run", render=False, verbose=False)
@@ -45,8 +47,8 @@ total_reward, num_timestep, elapsed_episode, animated_gif_file = agent.run_episo
 with open("gymLL_mo_results/before_training.gif", "wb+") as f:
     f.write(animated_gif_file.getbuffer())
 
-EPISODES = 500
-REPLAY_FREQUENCY=4
+EPISODES = 600
+REPLAY_FREQUENCY=8
 mname = "fooo.model"
 
 total_rewards = []
@@ -58,8 +60,9 @@ def early_stopping(reward:list)-> bool:
         return True
     return False
 
+THRESHOLD_EXCEEDED_CONSECUTIVELY = 2
 
-rewards, avg_rewards, timings, infos_lists = agent.learning(env=env,episodes=EPISODES, replay_frequency=REPLAY_FREQUENCY, mname=mname, verbose=True, early_stopping=early_stopping)
+rewards, avg_rewards, timings, infos_lists = agent.learning(env=env,episodes=EPISODES, replay_frequency=REPLAY_FREQUENCY, mname=mname, verbose=True, early_stopping=early_stopping, THRESHOLD_EXCEEDED_CONSECUTIVELY=THRESHOLD_EXCEEDED_CONSECUTIVELY)
 
 total_reward, num_timestep, elapsed_episode, animated_gif_file = agent.run_episode(env, title="After training", render=False, verbose=False)
 #IpyImg(data=animated_gif_file.getbuffer(), format='png')
@@ -68,13 +71,13 @@ with open("gymLL_mo_results/after_training.gif", "wb+") as f:
     f.write(animated_gif_file.getbuffer())
 
 r = Ban.display_plot(rewards, len(rewards), "Total rewards", call_plot=False, use_BanPlots=False)
-r.savefig("gymLL_mo_results/total_rewards_plot__BANPlots.png")
+r.savefig(f"gymLL_mo_results/total_rewards_plot_max_timesteps{MAX_TIMESTEPS}_episodes{len(rewards)}.png")
 
 r = Ban.display_plot(rewards, len(rewards), "Total rewards", call_plot=True, use_BanPlots=True)
 #r.savefig("gymLL_mo_results/total_rewards_plot__BANPlots.png")
 
 r = Ban.display_plot(avg_rewards, len(avg_rewards), "Total AVG rewards", call_plot=False, use_BanPlots=False)
-r.savefig("gymLL_mo_results/avg_rewards_plot.png")
+r.savefig(f"gymLL_mo_results/avg_rewards_plot_max_timesteps{MAX_TIMESTEPS}_episodes{len(rewards)}.png")
 
 r = Ban.display_plot(avg_rewards, len(avg_rewards), "Total AVG rewards", call_plot=True, use_BanPlots=True)
 #r.savefig("gymLL_mo_results/avg_rewards_plot__BANPlots.png")
