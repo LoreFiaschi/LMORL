@@ -70,8 +70,31 @@ class Ban:
 
         return trans  
 
+    def __display_plot_jl(rewards : list, num_episodes : int, title : str = "", call_plot:bool=True):
+        from julia.api import Julia
+        from julia import Main
+        import os, pathlib
 
-    def display_plot(rewards:list, num_episodes:int, title:str = "", call_plot:bool = True):
+        jl = Julia(compiled_modules=True)
+
+        cur_path = os.getcwd()
+
+        path = pathlib.Path(__file__).parent.resolve()
+        path = str(path).replace("\\", "\\\\")
+        jl.eval(f"cd(\"{path}\")")
+
+        jl.eval("""
+        (@isdefined plot) ? nothing : include(\"../BanPlots.jl\")
+        (@isdefined call_plot_from_python) ? nothing : include(\"../custom_BAN_utils.jl\")
+        """
+        )
+        os.chdir(cur_path)
+
+        rlplot = True
+
+        Main.call_plot_from_python(num_episodes, rewards, rlplot, title, call_plot)
+
+    def display_plot(rewards:list, num_episodes:int, title:str = "", call_plot:bool = True, use_BanPlots : bool = False):
             """
             plot the behaviour of the reawards during episodes
             - rewards must be a list of lists, where each element of the parent list is a MO reward and each element 
@@ -80,12 +103,16 @@ class Ban:
             #- call plt.show() to show the generated figure
             - call %matplotlib inline to display inline plot in .ipynb file
             """
+
+            if use_BanPlots:
+                Ban.__display_plot_jl(rewards, num_episodes, title, call_plot)
+                return
             
             tmp=list(zip(*rewards))
             how_many_components = len(tmp)
             
-            fig, (ax_list) = plt.subplots(how_many_components)
-
+            fig, (ax_list) = plt.subplots(how_many_components, sharex=True)
+            fig.subplots_adjust(hspace=0)
             fig.suptitle(title)
 
             for i in range(how_many_components):
