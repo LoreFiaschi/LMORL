@@ -48,3 +48,20 @@ end
 function add_experience_custom_types!(agent::DQNAgent, state::StateType,action_index::Int64,reward_list::Array{Float32,1},next_state::StateType,done::Bool)
     add_experience!(agent,state,convert(Int32, action_index), parse_ban_from_array(reward_list, BAN_SIZE), next_state, done)
 end
+
+#function call_plot_from_python(num_episodes::Int, rewards_list_of_list::Array{Array{Float64,1}, 1}, rlplot::Bool, title::String, call_plot::Bool)
+function call_plot_from_python(num_episodes::Int, rewards_matrix::Matrix{Float64}, rlplot::Bool, title::String, call_plot::Bool)
+    x=convert(Vector{Ban}, range(1,num_episodes))
+    y=Ban[] #Vector{Ban}#(undef,0)
+    for i = 1:size(rewards_matrix,1)
+        append!(y, parse_ban_from_array(rewards_matrix[i, :], BAN_SIZE)) 
+    end
+    #for reward_list in rewards_list_of_list
+    #    push!(y, parse_ban_from_array(reward_list, BAN_SIZE)) 
+    #end
+    plot(x, y, rlplot=rlplot, title=title)
+    if call_plot
+        PyPlot.show()
+    end
+    #x::Vector{Ban}, y::Vector{Ban}; kwargs...
+end
