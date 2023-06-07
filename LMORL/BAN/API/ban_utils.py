@@ -45,18 +45,27 @@ class Ban:
         return Ban(res_p, res_num)
 
     
-    def print(self):
+    def print(self, print_on_std_out : bool = True):
         trans = Ban.get_mapping()
         
         char = "α"
 
+        output = ""
+
         for index, el in enumerate(self.num):
             exp = self.p - index
             exp_str = str(exp).translate(trans)
-            if index > 0 and el >= 0: print(" + ", end="")
-            print(f"{el}{char}{exp_str}", end="")
+            if index > 0 and el >= 0: output += " + " #print(" + ", end="")
+            output += f"{el}{char}{exp_str}" #print(f"{el}{char}{exp_str}", end="")
 
-        print()
+        if print_on_std_out:
+            print(output)
+        return output
+
+    def get_as_ban_string(ban_as_list : list) -> str:
+        tmp_ban = Ban(0, ban_as_list)
+        return tmp_ban.print(print_on_std_out=False)
+
 
     def get_mapping():
 

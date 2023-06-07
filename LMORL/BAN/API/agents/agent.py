@@ -3,6 +3,8 @@ from LMORL.Environment import Environment
 
 from LMORL.BAN.API.agents.timestep import Timestep
 
+from LMORL.BAN.API.ban_utils import Ban
+
 from julia.api import Julia
 
 from julia import Main
@@ -19,10 +21,13 @@ import matplotlib.pyplot as plt
 
 from io import BytesIO
 
-DEBUG = True
+DEBUG = False
 ELAPSED_THRESHOLD = 1
 
 class Agent(ABC):
+
+    PRINT_AS_BANs = True
+
     def __init__(self, input_size : int, num_actions : int, action_space, ban_size : int, max_memory_size : int = 100, train_start : int = 100) -> None:
         
         self.input_size = input_size
@@ -159,7 +164,12 @@ class Agent(ABC):
             now = datetime.now()
             elapsed_episode = (now - begin_episode_time).total_seconds()
             print_time = now.strftime("%H:%M:%S")
-            if verbose: print(f"{print_time}\tEpisode\t{episode_number}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+            if verbose:
+                if not self.PRINT_AS_BANs:
+                    print(f"{print_time}\tEpisode\t{episode_number}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{totrew}\t| 100AvgReward: {avg_reward}")
+                else:
+                    print(f"{print_time}\tEpisode\t{episode_number}\ttimesteps:\t{t}\tTook\t{elapsed_episode} sec - reward:\t{Ban.get_as_ban_string(totrew)}\t| 100AvgReward: {Ban.get_as_ban_string(avg_reward)}")
+            
             
             #if reward_threshold is not None and reward[0] >= reward_threshold:
             if callable(early_stopping) and early_stopping(totrew) == True:

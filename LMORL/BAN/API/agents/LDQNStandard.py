@@ -35,6 +35,9 @@ class DQN(nn.Module):
 		return x.view((x.size(0),) + self.out_size)
 
 class LDQNStandard(Agent):
+
+    PRINT_AS_BANs = False
+
     def __init__(self, input_size : int, num_actions : int, action_space, 
 	      learning_rate : float, epsilon_decay : float, 
 	      epsilon_min : float, batch_size : int, 
