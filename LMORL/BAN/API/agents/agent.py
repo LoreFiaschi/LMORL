@@ -277,7 +277,7 @@ class Agent(ABC):
         
         pass
 
-    #@abstractmethod
+    @abstractmethod
     def _episode_end():
         """
         this method is called at each episode end,
