@@ -20,13 +20,14 @@ early_stopping_window = 20
 model_path = model_path = "saved_models\\PPO_actor"
 #############################################
 
-ppo = PPO_agent(env, state_dim, action_dim, n_latent_var, lr,
-                 betas, gamma, K_epochs, eps_clip, solved_reward,
-                   max_episodes, max_timesteps, update_timestep,
-                     early_stopping_window, model_path = model_path)
+ppo = PPO_agent(env=env, state_dim=state_dim, action_dim=action_dim, n_latent_var=n_latent_var,
+                lr=lr, betas=betas, gamma=gamma, K_epochs=K_epochs, eps_clip=eps_clip,
+                solved_reward=solved_reward, max_episodes=max_episodes, max_timesteps=max_timesteps,
+                update_timestep=update_timestep, early_stopping_window=early_stopping_window,
+                model_path = model_path)
 
-#ppo.train()
-#ppo.plot()
+ppo.train()
+ppo.plot()
 env.close()
 env = gym.make('CartPole-v1', render_mode = "human")
 ppo.test(n_episodes=5, env=env)
