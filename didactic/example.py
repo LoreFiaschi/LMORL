@@ -5,7 +5,7 @@ import gymnasium as gym
 env_name = "CartPole-v1"
 env = gym.make(env_name)
 state_dim = env.observation_space.shape[0]
-action_dim = 2
+action_dim = env.action_space.n
 solved_reward = 500         # stop training if avg_reward > solved_reward
 max_episodes = 3000         # max training episodes
 max_timesteps = 1000        # max timesteps in one episode
