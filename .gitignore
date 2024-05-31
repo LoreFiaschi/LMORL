@@ -1,2 +1,5 @@
 __pycache__/
 *.bson
+didactic/agents/__pycache__
+didactic/agents/my_utils/__pycache__
+didactic/agents/networks/__pycache__
